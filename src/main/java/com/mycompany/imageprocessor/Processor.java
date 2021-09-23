@@ -47,7 +47,41 @@ public class Processor {
         }
         return true;
     }
+    
+    //TODO:
+    public void histogramEqualizationGlobal() {
+        
+    }
+    
+    //TODO:
+    public void histogramEqualizationLocal() {
+        //Ask User for N x N mask where N%3=0, and N smaller than image res.
+        //Default: 3x3
+    }
+    
+    public void smoothingFilter() {
+        //Ask User for N x N mask where N%3=0, and N smaller than image res.
+        //Default: 3x3
+    }
 
+    public void medianFilter() {
+        //Ask User for N x N mask where N%3=0, and N smaller than image res.
+        //Default: 3x3
+    }
+
+    public void sharpeningLaplacianFilter() {
+        //Ask User for N x N mask where N%3=0, and N smaller than image res.
+        //Default: 3x3
+    }
+
+    public void highBoostingFilter() {
+        //User inputs a value for A
+    }
+    
+    public void removeBitplane() {
+        //Show the removal of lower and higher bit planes, their histograms, and thier effects.
+    }
+    
     /**
      * Currently saves an image without a specific level of compression.
      * May yield a different file size than expected.
