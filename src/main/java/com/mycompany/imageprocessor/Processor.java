@@ -2,6 +2,7 @@ package com.mycompany.imageprocessor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import org.opencv.core.Core;
 import static org.opencv.core.CvType.CV_8UC1;
 import org.opencv.core.Mat;
@@ -50,31 +51,51 @@ public class Processor {
         return true;
     }
 
-    //TODO: 8-bit Image Only for now.
+    //8-bit Image Only for now.
     public void histogramEqualizationGlobal() {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        //Graylevels Rk are the keys. Values are the indices. Values.size = Nk
+        HashMap<Integer, ArrayList<String>> histogram = new HashMap<>();
+        //Initialize the arraylists
+        for (int n = 0; n < 256; n++) {
+            histogram.put(n, new ArrayList<>());
+        }
+        
         //Create the histogram for the current image.
-        ArrayList<Integer> histogram = new ArrayList<>(Collections.nCopies(256, 0));
         for (int i = 0; i < matrix.rows(); i++) {
             for (int j = 0; j < matrix.cols(); j++) {
                 int grayValue = (int) matrix.get(i, j)[0];
-                int currentCount = histogram.get(grayValue);
-                histogram.set(grayValue, (currentCount + 1));
+                //Store pixel coordinates as string delimit via ","
+                histogram.get(grayValue).add(i + "," + j);
             }
         }
         
         //Ratio = (L-1)/(M*N)
-        final double RATIO = histogram.size() / ((double) (matrix.rows() * matrix.cols()));
-        ArrayList<Integer> equalizedHistogram = new ArrayList<>(Collections.nCopies(256, 0));        
+        final double RATIO = histogram.keySet().size() / ((double) (matrix.rows() * matrix.cols()));
+        ArrayList<Integer> equalizedHistogram = new ArrayList<>(Collections.nCopies(256, 0));
         int rKSum = 0;
-        for (int k = 0; k < histogram.size(); k++) {
-            //For each graylevel Rk-term, calculate the S-term
-            rKSum += histogram.get(k);
+        
+        //Iterating rk=0 to 256, calculate the S-term
+        for (int k = 0; k < histogram.keySet().size(); k++) {
+            rKSum += histogram.get(k).size();
             int sValue = (int) Math.round(RATIO * rKSum);
             equalizedHistogram.set(k, sValue);
         }
         
-        //Now Assign each graylevel rk to the gray level s-term.
-        //Might want to use a HashMap for indices and while loops for this.
+        //Iterating rk=0 to 256, assign rk its new corresponding value, s-term.
+        for(int a = 0; a < histogram.keySet().size(); a++) {
+            //Retrieve all the coordinates of pixels of gray value rk = a
+            ArrayList<String> list = histogram.get(a);
+            int sTerm = equalizedHistogram.get(a);
+            
+            for(int b = 0; b < list.size(); b++) {
+                String[] coordinates = list.get(b).split(",");
+                int x = Integer.parseInt(coordinates[0]);
+                int y = Integer.parseInt(coordinates[1]);
+                
+                outputMatrix.put(x, y, sTerm);                
+            }
+        }
 
     }
 
