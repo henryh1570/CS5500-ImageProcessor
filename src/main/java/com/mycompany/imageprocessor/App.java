@@ -13,6 +13,10 @@ public class App {
 
     public static void main(String[] args) {        
         //Run the GUI MainScreen
+        Processor p = new Processor();
+        p.loadImageGrayscale("lena512.bmp");
+        p.histogramEqualizationGlobal();
+        /*
         try {
             MainScreen screen = new MainScreen();
             Point center = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
@@ -25,6 +29,6 @@ public class App {
         } catch (Exception e) {
             System.err.println(e + " was found\nTerminating application");
             System.exit(0);
-        }         
+        }         */
     }
 }

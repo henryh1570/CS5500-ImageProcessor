@@ -1,5 +1,7 @@
 package com.mycompany.imageprocessor;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import org.opencv.core.Core;
 import static org.opencv.core.CvType.CV_8UC1;
 import org.opencv.core.Mat;
@@ -23,16 +25,16 @@ public class Processor {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         IMAGE_CODECS = new Imgcodecs();
     }
-    
+
     public void setOutputName(String name, String path) {
         outputName = name;
         absoluteOutputFilePath = path;
     }
-    
+
     public String getOutputFilePath() {
         return absoluteOutputFilePath;
     }
-    
+
     public String getOutputName() {
         return outputName;
     }
@@ -47,18 +49,41 @@ public class Processor {
         }
         return true;
     }
-    
-    //TODO:
+
+    //TODO: 8-bit Image Only for now.
     public void histogramEqualizationGlobal() {
+        //Create the histogram for the current image.
+        ArrayList<Integer> histogram = new ArrayList<>(Collections.nCopies(256, 0));
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                int grayValue = (int) matrix.get(i, j)[0];
+                int currentCount = histogram.get(grayValue);
+                histogram.set(grayValue, (currentCount + 1));
+            }
+        }
         
+        //Ratio = (L-1)/(M*N)
+        final double RATIO = histogram.size() / ((double) (matrix.rows() * matrix.cols()));
+        ArrayList<Integer> equalizedHistogram = new ArrayList<>(Collections.nCopies(256, 0));        
+        int rKSum = 0;
+        for (int k = 0; k < histogram.size(); k++) {
+            //For each graylevel Rk-term, calculate the S-term
+            rKSum += histogram.get(k);
+            int sValue = (int) Math.round(RATIO * rKSum);
+            equalizedHistogram.set(k, sValue);
+        }
+        
+        //Now Assign each graylevel rk to the gray level s-term.
+        //Might want to use a HashMap for indices and while loops for this.
+
     }
-    
+
     //TODO:
     public void histogramEqualizationLocal() {
         //Ask User for N x N mask where N%3=0, and N smaller than image res.
         //Default: 3x3
     }
-    
+
     public void smoothingFilter() {
         //Ask User for N x N mask where N%3=0, and N smaller than image res.
         //Default: 3x3
@@ -77,14 +102,14 @@ public class Processor {
     public void highBoostingFilter() {
         //User inputs a value for A
     }
-    
+
     public void removeBitplane() {
         //Show the removal of lower and higher bit planes, their histograms, and thier effects.
     }
-    
+
     /**
-     * Currently saves an image without a specific level of compression.
-     * May yield a different file size than expected.
+     * Currently saves an image without a specific level of compression. May
+     * yield a different file size than expected.
      */
     public boolean saveImage() {
         try {
@@ -99,8 +124,8 @@ public class Processor {
     }
 
     /**
-     * Create a new desiredRows by desiredCols resolution image of the original image. 
-     * Alternating rows and cols are used to extract the value of pixels.
+     * Create a new desiredRows by desiredCols resolution image of the original
+     * image. Alternating rows and cols are used to extract the value of pixels.
      */
     public void downscale(int desiredRows, int desiredCols) {
         outputMatrix = new Mat(desiredRows, desiredCols, CV_8UC1);
@@ -119,8 +144,8 @@ public class Processor {
     }
 
     /**
-     * Create an upscale desiredRows by desiredCols image 
-     * using 4 nearest-neighbors via euclidean distances.
+     * Create an upscale desiredRows by desiredCols image using 4
+     * nearest-neighbors via euclidean distances.
      */
     public void zoomNearestNeighbor(int desiredRows, int desiredCols) {
         outputMatrix = new Mat(desiredRows, desiredCols, CV_8UC1);
@@ -240,7 +265,7 @@ public class Processor {
             for (int j = 0; j < desiredCols; j++) {
                 double cx = (double) j / FACTOR_ROWS; //ConvertedX
                 //top and bottom are the nearest-neighbor points
-                
+
                 double topValue = matrix.get((int) cx, topNeighbor)[0];
                 double bottomValue;
                 double val;
@@ -274,7 +299,7 @@ public class Processor {
         // Scale factor for the new:old image ratio.
         final double FACTOR_ROWS = desiredRows / (double) matrix.rows();
         final double FACTOR_COLS = desiredCols / (double) matrix.cols();
-       
+
         //i iterates the y-axis, j iterates the x-axis
         for (int i = 0; i < desiredRows; i++) {
             double cy = (double) i / FACTOR_COLS;       //ConvertedY
