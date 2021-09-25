@@ -15,8 +15,8 @@ public class App {
         //Run the GUI MainScreen
         Processor p = new Processor();
         p.loadImageGrayscale("lena512.bmp");
-        p.setOutputName("output.bmp", System.getProperty("user.dir")+"output.bmp");
-        p.histogramEqualizationGlobal();
+        p.setOutputName("output.bmp", "output.bmp");
+        p.histogramEqualizationLocal(3);
         p.saveImage();
         /*
         try {

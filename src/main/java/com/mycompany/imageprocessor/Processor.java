@@ -54,13 +54,13 @@ public class Processor {
     //8-bit Image Only for now.
     public void histogramEqualizationGlobal() {
         outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
-        //Graylevels Rk are the keys. Values are the indices. Values.size = Nk
+        //Graylevels Rk are the keys. Values are the pixel coordinates. Values.size = Nk
         HashMap<Integer, ArrayList<String>> histogram = new HashMap<>();
         //Initialize the arraylists
         for (int n = 0; n < 256; n++) {
             histogram.put(n, new ArrayList<>());
         }
-        
+
         //Create the histogram for the current image.
         for (int i = 0; i < matrix.rows(); i++) {
             for (int j = 0; j < matrix.cols(); j++) {
@@ -69,40 +69,77 @@ public class Processor {
                 histogram.get(grayValue).add(i + "," + j);
             }
         }
-        
+
         //Ratio = (L-1)/(M*N)
-        final double RATIO = histogram.keySet().size() / ((double) (matrix.rows() * matrix.cols()));
+        final double RATIO = (histogram.keySet().size() - 1) / ((double) (matrix.rows() * matrix.cols()));
         ArrayList<Integer> equalizedHistogram = new ArrayList<>(Collections.nCopies(256, 0));
         int rKSum = 0;
-        
+
         //Iterating rk=0 to 256, calculate the S-term
         for (int k = 0; k < histogram.keySet().size(); k++) {
             rKSum += histogram.get(k).size();
             int sValue = (int) Math.round(RATIO * rKSum);
             equalizedHistogram.set(k, sValue);
         }
-        
-        //Iterating rk=0 to 256, assign rk its new corresponding value, s-term.
-        for(int a = 0; a < histogram.keySet().size(); a++) {
+
+        //Iterating rk=0 to 256, assign rk its new corresponding value, S-term.
+        for (int a = 0; a < histogram.keySet().size(); a++) {
             //Retrieve all the coordinates of pixels of gray value rk = a
             ArrayList<String> list = histogram.get(a);
             int sTerm = equalizedHistogram.get(a);
-            
-            for(int b = 0; b < list.size(); b++) {
+
+            for (int b = 0; b < list.size(); b++) {
                 String[] coordinates = list.get(b).split(",");
                 int x = Integer.parseInt(coordinates[0]);
                 int y = Integer.parseInt(coordinates[1]);
-                
-                outputMatrix.put(x, y, sTerm);                
+
+                outputMatrix.put(x, y, sTerm);
             }
         }
 
     }
 
-    //TODO:
-    public void histogramEqualizationLocal() {
-        //Ask User for N x N mask where N%3=0, and N smaller than image res.
-        //Default: 3x3
+    //Default mask: 3x3. User can define mask for NxN, N is odd and >3.
+    //Let: center=(x,y). Then Start=(x-flr(n/2),y-flr(n/2)).
+    public void histogramEqualizationLocal(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = size;
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+        final double RATIO = 255 / (double) (n * n);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                //Calculate the histogram for current center pixel (i,j)
+                //Offset from center = +/- flr(n/2)
+                ArrayList<Integer> histogram = new ArrayList<>(Collections.nCopies(256, 0));
+                for (int a = (i-(n/2)); a < (1+i+(n/2)); a++) {
+                    for (int b = (j-(n/2)); b < (1+j+(n/2)); b++) {
+                        //Zero pad for out of bounds
+                        int grayValue = 0;
+                        if (a < 0 || b < 0 || a > matrix.cols() - 1 || b > matrix.rows() - 1) {
+                        } else {
+                            grayValue = (int) matrix.get(a, b)[0];
+                        }
+                        histogram.set(grayValue, histogram.get(grayValue) + 1);
+                    }
+                }
+
+                //Now calculate the s-terms for LHE
+                int rKSum = 0;
+                double centerValue = matrix.get(i, j)[0];
+                for (int c = 0; c < histogram.size(); c++) {
+                    rKSum += histogram.get(c);
+                    // Can terminate early if calculating center
+                    if (c == centerValue) {                        
+                        outputMatrix.put(i, j, Math.round(rKSum * RATIO));
+                        c = histogram.size();
+                    }
+                }
+            }
+        }
     }
 
     public void smoothingFilter() {
