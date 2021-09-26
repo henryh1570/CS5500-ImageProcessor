@@ -141,7 +141,8 @@ public class Processor {
         }
     }
 
-    //Can be box filter or weighted average filter
+    //TODO: Can be box filter or weighted average filter
+    //What are the mask weights?
     public void smoothingFilter(int size) {
         outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
         int n = size;
@@ -151,9 +152,38 @@ public class Processor {
 
     }
 
-    public void medianFilter() {
-        //Ask User for N x N mask where N%3=0, and N smaller than image res.
-        //Default: 3x3
+    /**
+     * User chooses an NxN mask size that is odd and >= 3.
+     * Removes impulse noise, but may produce blurring.
+     * Not allowing 0 padding for out of bounds.
+     */
+    public void medianFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = size;
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                
+                ArrayList<Integer> list = new ArrayList<>();
+                int count = 0;
+                //Iterate the current pixel's neighbors
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            list.add((int) matrix.get(a, b)[0]);
+                            count++;
+                        }
+                    }
+                }
+                //Replace current value with median value
+                Collections.sort(list);
+                outputMatrix.put(i, j, list.get((1+count)/2));
+            }
+        }
     }
 
     public void sharpeningLaplacianFilter() {
@@ -165,7 +195,7 @@ public class Processor {
         //User inputs a value for A
     }
 
-    //Show the removal of lower and higher bit planes, their histograms, and their effects.
+    //TODO: Show the removal of lower and higher bit planes, their histograms, and their effects.
     //Remove certain bitplanes from 7 <--> 0, where 7 is MSB in an 8-bit image.
     public void removeBitplane(int[] bitPlanes) {
         outputMatrix = matrix.clone();

@@ -2,6 +2,8 @@ package com.mycompany.imageprocessor;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Collections;
 import javax.swing.JFrame;
 
 /**
@@ -17,8 +19,8 @@ public class App {
         Processor p = new Processor();
         p.loadImageGrayscale("lena512.bmp");
         p.setOutputName("output.bmp", "output.bmp");
-//        p.smoothingFilter(3);
-        p.removeBitplane(new int[]{0, 1, 2, 3});
+//        p.medianFilter(9);
+//        p.removeBitplane(new int[]{0, 1, 2, 3});
 //        p.histogramEqualizationGlobal();
 //        p.histogramEqualizationLocal(69);
         p.saveImage();
