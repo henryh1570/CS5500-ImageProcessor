@@ -141,9 +141,14 @@ public class Processor {
         }
     }
 
-    public void smoothingFilter() {
-        //Ask User for N x N mask where N%3=0, and N smaller than image res.
-        //Default: 3x3
+    //Can be box filter or weighted average filter
+    public void smoothingFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = size;
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+
     }
 
     public void medianFilter() {
@@ -161,26 +166,30 @@ public class Processor {
     }
 
     //Show the removal of lower and higher bit planes, their histograms, and their effects.
+    //Remove certain bitplanes from 7 <--> 0, where 7 is MSB in an 8-bit image.
     public void removeBitplane(int[] bitPlanes) {
         outputMatrix = matrix.clone();
-
+        //255 in binary
+        int mask = 0b11111111;
+        //Strip the mask of the specified bit positions
         for (Integer position : bitPlanes) {
-            //255 in binary stripping the bit at position
-            int mask = 0b11111111 & ~(1 << position);
+            mask = mask & ~(1 << position);
+        }
 
-            for (int i = 0; i < outputMatrix.rows(); i++) {
-                for (int j = 0; j < outputMatrix.cols(); j++) {
-                    int value = (int) outputMatrix.get(i, j)[0];
-                    value = value & mask;
-                    outputMatrix.put(i, j, value);
-                }
+        //Bitwise AND the mask to every pixel value, stripping the bit-planes
+        for (int i = 0; i < outputMatrix.rows(); i++) {
+            for (int j = 0; j < outputMatrix.cols(); j++) {
+                int value = (int) outputMatrix.get(i, j)[0];
+                value = value & mask;
+                outputMatrix.put(i, j, value);
             }
         }
     }
-        /**
-         * Currently saves an image without a specific level of compression. May
-         * yield a different file size than expected.
-         */
+
+    /**
+     * Currently saves an image without a specific level of compression. May
+     * yield a different file size than expected.
+     */
     public boolean saveImage() {
         try {
             IMAGE_CODECS.imwrite(absoluteOutputFilePath, outputMatrix);

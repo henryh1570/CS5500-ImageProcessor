@@ -17,6 +17,7 @@ public class App {
         Processor p = new Processor();
         p.loadImageGrayscale("lena512.bmp");
         p.setOutputName("output.bmp", "output.bmp");
+//        p.smoothingFilter(3);
         p.removeBitplane(new int[]{0, 1, 2, 3});
 //        p.histogramEqualizationGlobal();
 //        p.histogramEqualizationLocal(69);
