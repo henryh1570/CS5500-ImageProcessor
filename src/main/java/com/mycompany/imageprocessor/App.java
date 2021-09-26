@@ -11,12 +11,15 @@ import javax.swing.JFrame;
  */
 public class App {
 
-    public static void main(String[] args) {        
+    public static void main(String[] args) {
+                
         //Run the GUI MainScreen
         Processor p = new Processor();
         p.loadImageGrayscale("lena512.bmp");
         p.setOutputName("output.bmp", "output.bmp");
-        p.histogramEqualizationLocal(3);
+        p.removeBitplane(new int[]{0, 1, 2, 3});
+//        p.histogramEqualizationGlobal();
+//        p.histogramEqualizationLocal(69);
         p.saveImage();
         /*
         try {

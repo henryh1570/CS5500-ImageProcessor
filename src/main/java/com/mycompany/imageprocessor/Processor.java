@@ -107,20 +107,19 @@ public class Processor {
         if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
             n = 3;
         }
-        final double RATIO = 255 / (double) (n * n);
+        final double RATIO = 255.0 / (double) (n * n);
 
         //Iterate the entire matrix
         for (int i = 0; i < matrix.rows(); i++) {
             for (int j = 0; j < matrix.cols(); j++) {
                 //Calculate the histogram for current center pixel (i,j)
-                //Offset from center = +/- flr(n/2)
                 ArrayList<Integer> histogram = new ArrayList<>(Collections.nCopies(256, 0));
-                for (int a = (i-(n/2)); a < (1+i+(n/2)); a++) {
-                    for (int b = (j-(n/2)); b < (1+j+(n/2)); b++) {
+                //Offset from center = +/- flr(n/2)
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
                         //Zero pad for out of bounds
                         int grayValue = 0;
-                        if (a < 0 || b < 0 || a > matrix.cols() - 1 || b > matrix.rows() - 1) {
-                        } else {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
                             grayValue = (int) matrix.get(a, b)[0];
                         }
                         histogram.set(grayValue, histogram.get(grayValue) + 1);
@@ -129,11 +128,11 @@ public class Processor {
 
                 //Now calculate the s-terms for LHE
                 int rKSum = 0;
-                double centerValue = matrix.get(i, j)[0];
+                int centerValue = (int) matrix.get(i, j)[0];
                 for (int c = 0; c < histogram.size(); c++) {
                     rKSum += histogram.get(c);
                     // Can terminate early if calculating center
-                    if (c == centerValue) {                        
+                    if (c == centerValue) {
                         outputMatrix.put(i, j, Math.round(rKSum * RATIO));
                         c = histogram.size();
                     }
@@ -161,14 +160,27 @@ public class Processor {
         //User inputs a value for A
     }
 
-    public void removeBitplane() {
-        //Show the removal of lower and higher bit planes, their histograms, and thier effects.
-    }
+    //Show the removal of lower and higher bit planes, their histograms, and their effects.
+    public void removeBitplane(int[] bitPlanes) {
+        outputMatrix = matrix.clone();
 
-    /**
-     * Currently saves an image without a specific level of compression. May
-     * yield a different file size than expected.
-     */
+        for (Integer position : bitPlanes) {
+            //255 in binary stripping the bit at position
+            int mask = 0b11111111 & ~(1 << position);
+
+            for (int i = 0; i < outputMatrix.rows(); i++) {
+                for (int j = 0; j < outputMatrix.cols(); j++) {
+                    int value = (int) outputMatrix.get(i, j)[0];
+                    value = value & mask;
+                    outputMatrix.put(i, j, value);
+                }
+            }
+        }
+    }
+        /**
+         * Currently saves an image without a specific level of compression. May
+         * yield a different file size than expected.
+         */
     public boolean saveImage() {
         try {
             IMAGE_CODECS.imwrite(absoluteOutputFilePath, outputMatrix);
