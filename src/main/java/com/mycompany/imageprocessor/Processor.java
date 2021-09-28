@@ -541,20 +541,45 @@ public class Processor {
         convolution(mask);
     }
     
-    //TODO:
+    /**
+     * The user can choose to use Gaussian, weighted average, or box filter
+     * kernels to create a blurring effect on the image. User can choose kernel
+     * size as well.
+     */
     public void smoothingFilter(int size, String type) {
         int n = size;
         if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
             n = 3;
         }
         
+        double total = 0;
+        
         double[][] mask = new double[n][n];
         switch (type) {
-            case "Gaussian":
+            case "Gaussian":                                
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        //Gaussian Formula for 2d, x2 and y2 are dist from cent.
+                        double sd = 1.0;
+                        int x2 = (n/2 - i) * (n/2 -i);
+                        int y2 = (n/2 - j) * (n/2 -j);
+                        double numerator = Math.pow(Math.E, -1*(x2+y2)/(2*sd*sd));
+                        double denominator = (2*Math.PI*sd*sd);
+                        //value is the normalized ratio of pixel val/h(s,t)
+                        double value = numerator/denominator;
+                        total += value;
+                        mask[i][j] = value;
+                    }
+                }
+                // Redistribute remainder of sum to make sure h(s,t) = 1
+                for (int a = 0; a < n; a++) {
+                    for (int b = 0; b < n; b++) {
+                        //Add the remainder to the pixel using its ratio
+                        mask[a][b] += mask[a][b]*(1/total)*((1-total));
+                    }
+                }
                 break;
-            case "Weighted":
-                double total = 0;
-                
+            case "Weighted":                
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j < n; j++) {
                         double value = 0;
