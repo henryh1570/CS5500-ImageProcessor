@@ -141,21 +141,10 @@ public class Processor {
         }
     }
 
-    //TODO: Can be box filter or weighted average filter
-    //What are the mask weights?
-    public void smoothingFilter(int size) {
-        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
-        int n = size;
-        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
-            n = 3;
-        }
-
-    }
-
     /**
-     * User chooses an NxN mask size that is odd and >= 3.
-     * Removes impulse noise, but may produce blurring.
-     * Not allowing 0 padding for out of bounds.
+     * User chooses an NxN mask size that is odd and >= 3. Removes impulse
+     * noise, but may produce blurring. Not allowing 0 padding for out of
+     * bounds.
      */
     public void medianFilter(int size) {
         outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
@@ -167,7 +156,7 @@ public class Processor {
         //Iterate the entire matrix
         for (int i = 0; i < matrix.rows(); i++) {
             for (int j = 0; j < matrix.cols(); j++) {
-                
+
                 ArrayList<Integer> list = new ArrayList<>();
                 int count = 0;
                 //Iterate the current pixel's neighbors
@@ -181,18 +170,9 @@ public class Processor {
                 }
                 //Replace current value with median value
                 Collections.sort(list);
-                outputMatrix.put(i, j, list.get((1+count)/2));
+                outputMatrix.put(i, j, list.get((1 + count) / 2));
             }
         }
-    }
-
-    public void sharpeningLaplacianFilter() {
-        //Ask User for N x N mask where N%3=0, and N smaller than image res.
-        //Default: 3x3
-    }
-
-    public void highBoostingFilter() {
-        //User inputs a value for A
     }
 
     //TODO: Show the removal of lower and higher bit planes, their histograms, and their effects.
@@ -496,5 +476,79 @@ public class Processor {
                 outputMatrix.put(i, j, newVal);
             }
         }
+    }
+
+    //Helper method for laplacian and smooth filters.
+    private void convolution(double[][] mask) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+
+        int n = mask.length;
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+
+                double sum = 0;
+                //Iterate the neighborhood of the current pixel
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        //Ignore the outofbounds
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            int posX = a - (i - (n/2));
+                            int posY = b - (j - (n/2));
+                            sum += (matrix.get(a, b)[0] * mask[posX][posY]);
+                        }
+                    }
+                }
+                outputMatrix.put(i, j, (int) sum);
+            }
+        }
+
+    }
+    
+    public void highBoostingFilter() {
+        //User inputs a value for A
+    }
+    
+
+    /**
+     * This Laplacian Operator produces kernels of only 1s surrounding the 
+     * larger center value, of which the numbers can all be flipped neg/pos.
+     * TODO: Diagonal and other variants of Laplacian may be implemented later.
+     */
+    public void sharpeningLaplacianFilter(int size, boolean centerIsPositive, boolean diagonalsIncluded) {
+        int n = size;
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+        
+        int sign = 1;
+        if (!centerIsPositive) {
+            sign = -sign;
+        }
+        double[][] mask = new double[n][n];
+        
+        //Including Diagonals
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                //Make non-center = +/- 1
+                if (!((i==n/2) && (j==n/2))) {
+                    mask[i][j] = -1 * sign;
+                } else {
+                    mask[i][j] = ((n*n) - 1) * sign;
+                }
+            }
+        }
+        convolution(mask);
+    }
+    
+    //TODO:
+    public void smoothingFilter(int size) {
+        int n = size;
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+        
+        double[][] mask = null;        
+        convolution(mask);
     }
 }
