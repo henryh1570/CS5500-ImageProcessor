@@ -20,7 +20,8 @@ public class App {
         p.loadImageGrayscale("lena512.bmp");
         p.setOutputName("output.bmp", "output.bmp");
 //        p.highBoostingFilter();
-          p.sharpeningLaplacianFilter(3, true, false);
+//        p.smoothingFilter(3, "Weighted");
+//          p.sharpeningLaplacianFilter(3, true, false);
 //        p.medianFilter(9);
 //        p.removeBitplane(new int[]{0, 1, 2, 3});
 //        p.histogramEqualizationGlobal();

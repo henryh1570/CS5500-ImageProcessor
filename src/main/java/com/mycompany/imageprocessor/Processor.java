@@ -542,13 +542,49 @@ public class Processor {
     }
     
     //TODO:
-    public void smoothingFilter(int size) {
+    public void smoothingFilter(int size, String type) {
         int n = size;
         if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
             n = 3;
         }
         
-        double[][] mask = null;        
+        double[][] mask = new double[n][n];
+        switch (type) {
+            case "Gaussian":
+                break;
+            case "Weighted":
+                double total = 0;
+                
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        double value = 0;
+                        //Assing value based on city-block distance
+                        if (!(i==n/2 && j==n/2)) {
+                            int cityBlockDist = Math.abs(n/2 - i) + Math.abs(n/2 - j);
+                            value = Math.pow(2, n - 1 -cityBlockDist);
+                        } else {
+                            //Center value: the highest power of 2.
+                            value = Math.pow(2, n - 1);
+                        }
+                        total += value;
+                        mask[i][j] = value;
+                    }
+                }
+                // Inefficient reweighting of the kernel. Makes sure h(s,t) = 1
+                for (int a = 0; a < n; a++) {
+                    for (int b = 0; b < n; b++) {
+                        mask[a][b] = mask[a][b] * (1/total);
+                    }
+                }
+                break;
+            default: //"Box"
+               for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        mask[i][j] = 1/(double)(n*n);
+                    }
+                }                
+                break;                
+        }
         convolution(mask);
     }
 }
