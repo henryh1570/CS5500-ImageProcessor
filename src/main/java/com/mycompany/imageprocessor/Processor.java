@@ -9,8 +9,9 @@ import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
 /**
- * The processor class takes image inputs, applies a user selected algorithm,
- * and returns the newly created image.
+ * The processor class loads images to perform user selected algorithms,
+ * producing new images and saves them back to disk.
+ * @author hh
  */
 public class Processor {
 
@@ -51,154 +52,10 @@ public class Processor {
         return true;
     }
 
-    //8-bit Image Only for now.
-    public void histogramEqualizationGlobal() {
-        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
-        //Graylevels Rk are the keys. Values are the pixel coordinates. Values.size = Nk
-        HashMap<Integer, ArrayList<String>> histogram = new HashMap<>();
-        //Initialize the arraylists
-        for (int n = 0; n < 256; n++) {
-            histogram.put(n, new ArrayList<>());
-        }
-
-        //Create the histogram for the current image.
-        for (int i = 0; i < matrix.rows(); i++) {
-            for (int j = 0; j < matrix.cols(); j++) {
-                int grayValue = (int) matrix.get(i, j)[0];
-                //Store pixel coordinates as string delimit via ","
-                histogram.get(grayValue).add(i + "," + j);
-            }
-        }
-
-        //Ratio = (L-1)/(M*N)
-        final double RATIO = (histogram.keySet().size() - 1) / ((double) (matrix.rows() * matrix.cols()));
-        ArrayList<Integer> equalizedHistogram = new ArrayList<>(Collections.nCopies(256, 0));
-        int rKSum = 0;
-
-        //Iterating rk=0 to 256, calculate the S-term
-        for (int k = 0; k < histogram.keySet().size(); k++) {
-            rKSum += histogram.get(k).size();
-            int sValue = (int) Math.round(RATIO * rKSum);
-            equalizedHistogram.set(k, sValue);
-        }
-
-        //Iterating rk=0 to 256, assign rk its new corresponding value, S-term.
-        for (int a = 0; a < histogram.keySet().size(); a++) {
-            //Retrieve all the coordinates of pixels of gray value rk = a
-            ArrayList<String> list = histogram.get(a);
-            int sTerm = equalizedHistogram.get(a);
-
-            for (int b = 0; b < list.size(); b++) {
-                String[] coordinates = list.get(b).split(",");
-                int x = Integer.parseInt(coordinates[0]);
-                int y = Integer.parseInt(coordinates[1]);
-
-                outputMatrix.put(x, y, sTerm);
-            }
-        }
-
-    }
-
-    //Default mask: 3x3. User can define mask for NxN, N is odd and >3.
-    //Let: center=(x,y). Then Start=(x-flr(n/2),y-flr(n/2)).
-    public void histogramEqualizationLocal(int size) {
-        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
-        int n = size;
-        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
-            n = 3;
-        }
-        final double RATIO = 255.0 / (double) (n * n);
-
-        //Iterate the entire matrix
-        for (int i = 0; i < matrix.rows(); i++) {
-            for (int j = 0; j < matrix.cols(); j++) {
-                //Calculate the histogram for current center pixel (i,j)
-                ArrayList<Integer> histogram = new ArrayList<>(Collections.nCopies(256, 0));
-                //Offset from center = +/- flr(n/2)
-                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
-                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
-                        //Zero pad for out of bounds
-                        int grayValue = 0;
-                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
-                            grayValue = (int) matrix.get(a, b)[0];
-                        }
-                        histogram.set(grayValue, histogram.get(grayValue) + 1);
-                    }
-                }
-
-                //Now calculate the s-terms for LHE
-                int rKSum = 0;
-                int centerValue = (int) matrix.get(i, j)[0];
-                for (int c = 0; c < histogram.size(); c++) {
-                    rKSum += histogram.get(c);
-                    // Can terminate early if calculating center
-                    if (c == centerValue) {
-                        outputMatrix.put(i, j, Math.round(rKSum * RATIO));
-                        c = histogram.size();
-                    }
-                }
-            }
-        }
-    }
-
     /**
-     * User chooses an NxN mask size that is odd and >= 3. Removes impulse
-     * noise, but may produce blurring. Not allowing 0 padding for out of
-     * bounds.
-     */
-    public void medianFilter(int size) {
-        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
-        int n = size;
-        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
-            n = 3;
-        }
-
-        //Iterate the entire matrix
-        for (int i = 0; i < matrix.rows(); i++) {
-            for (int j = 0; j < matrix.cols(); j++) {
-
-                ArrayList<Integer> list = new ArrayList<>();
-                int count = 0;
-                //Iterate the current pixel's neighbors
-                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
-                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
-                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
-                            list.add((int) matrix.get(a, b)[0]);
-                            count++;
-                        }
-                    }
-                }
-                //Replace current value with median value
-                Collections.sort(list);
-                outputMatrix.put(i, j, list.get((1 + count) / 2));
-            }
-        }
-    }
-
-    //TODO: Show the removal of lower and higher bit planes, their histograms, and their effects.
-    //Remove certain bitplanes from 7 <--> 0, where 7 is MSB in an 8-bit image.
-    public void removeBitplane(int[] bitPlanes) {
-        outputMatrix = matrix.clone();
-        //255 in binary
-        int mask = 0b11111111;
-        //Strip the mask of the specified bit positions
-        for (Integer position : bitPlanes) {
-            mask = mask & ~(1 << position);
-        }
-
-        //Bitwise AND the mask to every pixel value, stripping the bit-planes
-        for (int i = 0; i < outputMatrix.rows(); i++) {
-            for (int j = 0; j < outputMatrix.cols(); j++) {
-                int value = (int) outputMatrix.get(i, j)[0];
-                value = value & mask;
-                outputMatrix.put(i, j, value);
-            }
-        }
-    }
-
-    /**
-     * Currently saves an image without a specific level of compression. May
-     * yield a different file size than expected.
+     * Writes to disk the outputMatrix, of which does not specify a level of
+     * compression and may yield a different file size than expected.
+     * @return true if successful write.
      */
     public boolean saveImage() {
         try {
@@ -211,10 +68,12 @@ public class Processor {
         }
         return true;
     }
-
+    
     /**
-     * Create a new desiredRows by desiredCols resolution image of the original
-     * image. Alternating rows and cols are used to extract the value of pixels.
+     * Shrinks the original image to a smaller, user specified dimensions via
+     * removing alternating rows and cols.
+     * @param desiredRows user specified rows dimensions.
+     * @param desiredCols user specified cols dimensions.
      */
     public void downscale(int desiredRows, int desiredCols) {
         outputMatrix = new Mat(desiredRows, desiredCols, CV_8UC1);
@@ -232,9 +91,16 @@ public class Processor {
         }
     }
 
+    //Helper method for linear interpolation
+    private double getEuclideanDistance(double x1, double y1, double x2, double y2) {
+        return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
+    }    
+    
     /**
-     * Create an upscale desiredRows by desiredCols image using 4
+     * Create an upscale of the original image using 4
      * nearest-neighbors via euclidean distances.
+     * @param desiredRows user specified rows dimensions.
+     * @param desiredCols user specified cols dimensions.
      */
     public void zoomNearestNeighbor(int desiredRows, int desiredCols) {
         outputMatrix = new Mat(desiredRows, desiredCols, CV_8UC1);
@@ -252,11 +118,11 @@ public class Processor {
                 int y2 = (int) cy;
                 int nearestX = x2;
                 int nearestY = y2;
-                double distance = getDistance(cx, cy, x2, y2);
+                double distance = getEuclideanDistance(cx, cy, x2, y2);
                 //Bottom Left
                 x2 = (int) (j / FACTOR_X);
                 y2 = (int) Math.ceil(i / FACTOR_Y);
-                double distance2 = getDistance(cx, cy, x2, y2);
+                double distance2 = getEuclideanDistance(cx, cy, x2, y2);
                 //Check if the next y2 is not outOfBounds and which distance is bigger
                 if (distance < distance2 && y2 < matrix.cols()) {
                     distance = distance2;
@@ -266,7 +132,7 @@ public class Processor {
                 //Top Right
                 x2 = (int) (j / FACTOR_X);
                 y2 = (int) Math.floor(i / FACTOR_Y);
-                distance2 = getDistance(cx, cy, x2, y2);
+                distance2 = getEuclideanDistance(cx, cy, x2, y2);
                 //Check if the next x2 is not outOfBounds and which distance is bigger
                 if (distance < distance2 && x2 < matrix.rows()) {
                     distance = distance2;
@@ -276,7 +142,7 @@ public class Processor {
                 //Bottom Right
                 x2 = (int) Math.ceil(j / FACTOR_X);
                 y2 = (int) Math.ceil(i / FACTOR_Y);
-                distance2 = getDistance(cx, cy, x2, y2);
+                distance2 = getEuclideanDistance(cx, cy, x2, y2);
                 //Check if the next x2 and y2 is not outOfBounds and which distance is bigger
                 if (distance < distance2 && x2 < matrix.rows() && y2 < matrix.cols()) {
                     nearestX = x2;
@@ -287,14 +153,13 @@ public class Processor {
         }
     }
 
-    private double getDistance(double x1, double y1, double x2, double y2) {
-        return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
-    }
-
     /**
-     * To find the value for a pixel in the new, larger image, a conversion is
-     * done to find it's approximate neighbors in the original image, in the X
-     * direction (left to right, top to bottom).
+     * Create an upscale of the original image via linear interpolation in the X
+     * direction. To find the value for a pixel in the new, larger image, 
+     * a conversion is done to find it's approximate neighbors in the original 
+     * image, in the X direction (left to right, top to bottom).
+     * @param desiredRows user specified rows dimensions.
+     * @param desiredCols user specified cols dimensions.
      */
     public void zoomLinearX(int desiredRows, int desiredCols) {
         outputMatrix = new Mat(desiredRows, desiredCols, CV_8UC1);
@@ -335,9 +200,12 @@ public class Processor {
     }
 
     /**
-     * Linear interpolation upscale in the Y direction. We still iterate through
-     * the image from left to right, top to bottom. Except that we approximate
-     * the value of a new pixel via its top and bottom neighbors.
+     * Create an upscale of the original image via linear interpolation 
+     * in the Y direction. Iterate through the image from left to right, 
+     * top to bottom and approximate the value of a new pixel with
+     * its top and bottom neighbors.
+     * @param desiredRows user specified rows dimensions.
+     * @param desiredCols user specified cols dimensions.
      */
     public void zoomLinearY(int desiredRows, int desiredCols) {
         outputMatrix = new Mat(desiredRows, desiredCols, CV_8UC1);
@@ -379,9 +247,10 @@ public class Processor {
     }
 
     /**
-     * Combining linear interpolation in the x and y direction to produce an
-     * even more accurate upscale image. 4 Points are selected to use given a
-     * converted point we are trying to find the value for.
+     * Create an upscale of the original image via linear interpolation in both
+     * the x and y direction for more accuracy. Uses 2-x and 2-y points.
+     * @param desiredRows user specified rows dimensions.
+     * @param desiredCols user specified cols dimensions.
      */
     public void zoomBilinear(int desiredRows, int desiredCols) {
         outputMatrix = new Mat(desiredRows, desiredCols, CV_8UC1);
@@ -454,10 +323,14 @@ public class Processor {
     }
 
     /**
-     * Because image bit depth cannot be reduced by library, the values will be
-     * altered proportionally to the bit depth. 0 = black. currentDepth-1 =
-     * white Total Equation: Floor(PropConversion * MaxRangeRatio) Total
-     * Equation: Floor(Floor(val/(2^c-t)) * ((2^c-1)/(2^t-1))
+     * Modify the existing image's gray levels by converting them to their
+     * closest value in smaller bit levels.
+     * Note: because image bit depth cannot be reduced by library, 
+     * the values will be altered proportionally to the bit depth.
+     * Where 0 = black. currentDepth-1 = white
+     * Total Equation: Floor(PropConversion * MaxRangeRatio)
+     * Total Equation: Floor(Floor(val/(2^c-t)) * ((2^c-1)/(2^t-1))
+     * @param targetDepth user defines what the final gray level will reduce to.
      */
     public void reduceGraylevel(int targetDepth) {
         //Create new matrix with specified rows, cols, bit-depth, and channels
@@ -478,7 +351,13 @@ public class Processor {
         }
     }
 
-    //Helper method for laplacian and smooth filters.
+    /**
+     * Helper method for laplacian and smoothing filters. Calculates current
+     * pixel's value of the original image via summing up the products of its
+     * local neighbors with user provided mask.
+     * @param mask also known as the kernel, a matrix of values to modify the
+     * current pixel value for various filter operations.
+     */
     private void convolution(double[][] mask) {
         outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
 
@@ -505,10 +384,144 @@ public class Processor {
 
     }
     
+     /**
+     * Takes the existing image and changes its values to a uniform, equalized
+     * histogram value.
+     */
+    public void histogramEqualizationGlobal() {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        //Graylevels Rk are the keys. Values are the pixel coordinates. Values.size = Nk
+        HashMap<Integer, ArrayList<String>> histogram = new HashMap<>();
+        //Initialize the arraylists
+        for (int n = 0; n < 256; n++) {
+            histogram.put(n, new ArrayList<>());
+        }
+
+        //Create the histogram for the current image.
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                int grayValue = (int) matrix.get(i, j)[0];
+                //Store pixel coordinates as string delimit via ","
+                histogram.get(grayValue).add(i + "," + j);
+            }
+        }
+
+        //Ratio = (L-1)/(M*N)
+        final double RATIO = (histogram.keySet().size() - 1) / ((double) (matrix.rows() * matrix.cols()));
+        ArrayList<Integer> equalizedHistogram = new ArrayList<>(Collections.nCopies(256, 0));
+        int rKSum = 0;
+
+        //Iterating rk=0 to 256, calculate the S-term
+        for (int k = 0; k < histogram.keySet().size(); k++) {
+            rKSum += histogram.get(k).size();
+            int sValue = (int) Math.round(RATIO * rKSum);
+            equalizedHistogram.set(k, sValue);
+        }
+
+        //Iterating rk=0 to 256, assign rk its new corresponding value, S-term.
+        for (int a = 0; a < histogram.keySet().size(); a++) {
+            //Retrieve all the coordinates of pixels of gray value rk = a
+            ArrayList<String> list = histogram.get(a);
+            int sTerm = equalizedHistogram.get(a);
+
+            for (int b = 0; b < list.size(); b++) {
+                String[] coordinates = list.get(b).split(",");
+                int x = Integer.parseInt(coordinates[0]);
+                int y = Integer.parseInt(coordinates[1]);
+
+                outputMatrix.put(x, y, sTerm);
+            }
+        }
+    }
+
+    
     /**
-     * High boost filter allows user to define the smoothing operation to use,
-     * including mask size and type, then can decide its weight to be added to
-     * the original image, resulting in the unsharp masking.
+     * Takes the existing image, modifies every value according to the current
+     * pixel's neighborhood's histogram equalized values.
+     * Beginning index (0,0) of a neighborhood is given, (0,0)=(x-flr(n/2),y-flr(n/2)).
+     * @param size defines the neighborhood of each pixel, NxN. Default=3.
+     */
+    public void histogramEqualizationLocal(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = size;
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+        final double RATIO = 255.0 / (double) (n * n);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                //Calculate the histogram for current center pixel (i,j)
+                ArrayList<Integer> histogram = new ArrayList<>(Collections.nCopies(256, 0));
+                //Offset from center = +/- flr(n/2)
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        //Zero pad for out of bounds
+                        int grayValue = 0;
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            grayValue = (int) matrix.get(a, b)[0];
+                        }
+                        histogram.set(grayValue, histogram.get(grayValue) + 1);
+                    }
+                }
+
+                //Now calculate the s-terms for LHE
+                int rKSum = 0;
+                int centerValue = (int) matrix.get(i, j)[0];
+                for (int c = 0; c < histogram.size(); c++) {
+                    rKSum += histogram.get(c);
+                    // Can terminate early if calculating center
+                    if (c == centerValue) {
+                        outputMatrix.put(i, j, Math.round(rKSum * RATIO));
+                        c = histogram.size();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Filter to Remove impulse noise, but may produce blurring.
+     * Assigns the median value to the current pixel according to its
+     * neighborhood defined by the mask. Ignores out of bounds values.
+     * @param size defines the mask size, NxN. Default=3.
+     */
+    public void medianFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = size;
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+
+                ArrayList<Integer> list = new ArrayList<>();
+                int count = 0;
+                //Iterate the current pixel's neighbors
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            list.add((int) matrix.get(a, b)[0]);
+                            count++;
+                        }
+                    }
+                }
+                //Replace current value with median value
+                Collections.sort(list);
+                outputMatrix.put(i, j, list.get((1 + count) / 2));
+            }
+        }
+    }
+    
+    /**
+     * Create a high-boosted image using user defined smoothing operation,
+     * mask size, type and weight.
+     * @param size user defined mask size, NxN where N is default = 3.
+     * @param weight user defined density of the mask to be added to the original image.
+     * @param filterType user defined method of Gaussian, Weighted, or Box.
      */
     public void highBoostingFilter(int size, double weight, String filterType) {
         double k = weight;
@@ -529,9 +542,13 @@ public class Processor {
     }
     
     /**
-     * This Laplacian Operator produces kernels of only 1s surrounding the 
-     * larger center value, of which the numbers can all be flipped neg/pos.
-     * TODO: Diagonal and other variants of Laplacian may be implemented later.
+     * Create the laplacian operator to the original image. Produces kernels of 
+     * only 1s surrounding the larger center value, of which the numbers can all
+     * be flipped neg/pos.
+     * @param size user defined mask size NxN, default N=3.
+     * @param centerIsPositive user defines the sign values of the entire mask.
+     * @param diagonalsIncluded currently not implemented. May be used for
+     * setting the corresponding "diagonals" of the mask to be 0 or 1.
      */
     public void sharpeningLaplacianFilter(int size, boolean centerIsPositive, boolean diagonalsIncluded) {
         int n = size;
@@ -560,10 +577,11 @@ public class Processor {
     }
     
     /**
-     * The user can choose to use Gaussian, weighted average, or box filter
-     * kernels to create a blurring effect on the image. User can choose kernel
-     * size as well.
+     * Create a blurred version of the original image using a user
+     * specified smoothing method and kernel size.
      * TODO: Allow user to change sigma, sd.
+     * @param size user defined mask size NxN, default N=3.
+     * @param type user defined method of either Gaussian, Weighted, or Box.
      */
     public void smoothingFilter(int size, String type) {
         int n = size;
@@ -630,5 +648,31 @@ public class Processor {
                 break;                
         }
         convolution(mask);
+    }
+    
+     /**
+     * A method to remove specified bitplanes from an image, where the most
+     * significant bit is 7, corresponding to the leftmost bit value.
+     * The least significant bit is on the right, represented by value 0.
+     * @param bitPlanes defines the bit locations to set to 0. Values may be
+     * a subset of the array {0,1,2,3,4,5,6,7}.
+     */
+    public void removeBitplane(int[] bitPlanes) {
+        outputMatrix = matrix.clone();
+        //255 in binary
+        int mask = 0b11111111;
+        //Strip the mask of the specified bit positions
+        for (Integer position : bitPlanes) {
+            mask = mask & ~(1 << position);
+        }
+
+        //Bitwise AND the mask to every pixel value, stripping the bit-planes
+        for (int i = 0; i < outputMatrix.rows(); i++) {
+            for (int j = 0; j < outputMatrix.cols(); j++) {
+                int value = (int) outputMatrix.get(i, j)[0];
+                value = value & mask;
+                outputMatrix.put(i, j, value);
+            }
+        }
     }
 }
