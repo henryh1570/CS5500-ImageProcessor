@@ -505,11 +505,29 @@ public class Processor {
 
     }
     
-    public void highBoostingFilter() {
-        //User inputs a value for A
+    /**
+     * High boost filter allows user to define the smoothing operation to use,
+     * including mask size and type, then can decide its weight to be added to
+     * the original image, resulting in the unsharp masking.
+     */
+    public void highBoostingFilter(int size, double weight, String filterType) {
+        double k = weight;
+        //temporary outputMatrix is generated
+        smoothingFilter(size, filterType); 
+        Mat blurredMatrix = outputMatrix.clone();
+        
+        //Highboost = original - k*(original - blurred)
+        for (int i = 0; i < blurredMatrix.rows(); i++) {
+            for (int j = 0; j < blurredMatrix.cols(); j++) {
+                double originalValue = matrix.get(i,j)[0];
+                double blurredValue = blurredMatrix.get(i, j)[0];
+                double value = originalValue + (k*(originalValue - blurredValue));
+                outputMatrix.put(i, j, (int)value);
+            }
+        }
+        blurredMatrix = null;
     }
     
-
     /**
      * This Laplacian Operator produces kernels of only 1s surrounding the 
      * larger center value, of which the numbers can all be flipped neg/pos.
@@ -545,6 +563,7 @@ public class Processor {
      * The user can choose to use Gaussian, weighted average, or box filter
      * kernels to create a blurring effect on the image. User can choose kernel
      * size as well.
+     * TODO: Allow user to change sigma, sd.
      */
     public void smoothingFilter(int size, String type) {
         int n = size;
