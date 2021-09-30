@@ -381,7 +381,6 @@ public class Processor {
                 outputMatrix.put(i, j, (int) sum);
             }
         }
-
     }
     
      /**

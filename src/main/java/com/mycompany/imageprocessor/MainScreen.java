@@ -35,6 +35,7 @@ public class MainScreen extends javax.swing.JFrame {
         outputNameTextField = new javax.swing.JTextField();
         bitLevelComboBox = new javax.swing.JComboBox<>();
         colsTextField = new javax.swing.JTextField();
+        instructionLabel = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         originalLabel = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
@@ -50,7 +51,12 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
-        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel" }));
+        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel", "Global Histogram Equalization", "Local Histogram Equalization", "Median Filter", "Laplacian Filter", "Smoothing Filter", "HighBoost Filter", "BitPlane Removal" }));
+        algorithmComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                algorithmComboBoxActionPerformed(evt);
+            }
+        });
 
         applyButton.setText("Apply");
         applyButton.addActionListener(new java.awt.event.ActionListener() {
@@ -61,11 +67,6 @@ public class MainScreen extends javax.swing.JFrame {
 
         rowsTextField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         rowsTextField.setToolTipText("Desired Rows");
-        rowsTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rowsTextFieldActionPerformed(evt);
-            }
-        });
 
         outputNameTextField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         outputNameTextField.setToolTipText("Specify File output name");
@@ -82,39 +83,47 @@ public class MainScreen extends javax.swing.JFrame {
         colsTextField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         colsTextField.setToolTipText("Desired Columns");
 
+        instructionLabel.setText("Instructions: For Downscale, enter the new row x column resolution in the 2 text boxes to the left of Apply.");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(openFileButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(algorithmComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(bitLevelComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(rowsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(colsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(applyButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(outputNameTextField)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(openFileButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(algorithmComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(bitLevelComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(rowsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(colsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(applyButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(outputNameTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(instructionLabel)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(openFileButton)
                     .addComponent(algorithmComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(applyButton)
-                    .addComponent(rowsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(outputNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(bitLevelComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(colsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                    .addComponent(rowsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(colsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(applyButton)
+                    .addComponent(outputNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(instructionLabel)
+                .addGap(0, 12, Short.MAX_VALUE))
         );
 
         originalLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -125,11 +134,11 @@ public class MainScreen extends javax.swing.JFrame {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(originalLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 594, Short.MAX_VALUE)
+            .addComponent(originalLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(originalLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(originalLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
         );
 
         transformedLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -140,15 +149,11 @@ public class MainScreen extends javax.swing.JFrame {
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(transformedLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 588, Short.MAX_VALUE))
+            .addComponent(transformedLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(transformedLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 621, Short.MAX_VALUE))
+            .addComponent(transformedLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -158,7 +163,7 @@ public class MainScreen extends javax.swing.JFrame {
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -205,101 +210,159 @@ public class MainScreen extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_openFileButtonActionPerformed
 
+    private void saveAndDisplay() {
+        try {
+            processor.saveImage();
+            BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
+            transformedLabel.setIcon(new ImageIcon(bf));
+            transformedLabel.setText("");            
+        } catch (Exception e) {
+            System.err.println(e + " was found");            
+        }
+    }
+    
     private void applyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyButtonActionPerformed
-        String algorithm = algorithmComboBox.getSelectedItem().toString();
-
+        String algorithm = algorithmComboBox.getSelectedItem().toString();        
+        Integer desiredRow;
+        Integer desiredCol;
+        int n = 3;
+        boolean centerIsPositive = false;
+        String colsStr;
+        
         switch(algorithm) {
             case "Downscale":
-                try {
-                    Integer desiredRow = new Integer(rowsTextField.getText());
-                    Integer desiredCol = new Integer(colsTextField.getText());
+                    desiredRow = new Integer(rowsTextField.getText());
+                    desiredCol = new Integer(colsTextField.getText());
                     processor.downscale(desiredRow, desiredCol);
-                    processor.saveImage();
-                    BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
-                    transformedLabel.setIcon(new ImageIcon(bf));
-                    transformedLabel.setText("");
-                } catch (Exception e) {
-                    System.err.println(e + " was found");
-                }
                 break;
             case "Zoom (Nearest Neighbor)":
-                try {
-                    Integer desiredRow = new Integer(rowsTextField.getText());
-                    Integer desiredCol = new Integer(colsTextField.getText());
+                    desiredRow = new Integer(rowsTextField.getText());
+                    desiredCol = new Integer(colsTextField.getText());
                     processor.zoomNearestNeighbor(desiredRow, desiredCol);
-                    processor.saveImage();
-                    BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
-                    transformedLabel.setIcon(new ImageIcon(bf));
-                    transformedLabel.setText("");
-                } catch (Exception e) {
-                    System.err.println(e + " was found");
-                }
                 break;
             case "Zoom (LinearX)":
-                try {
-                    Integer desiredRow = new Integer(rowsTextField.getText());
-                    Integer desiredCol = new Integer(colsTextField.getText());
+                    desiredRow = new Integer(rowsTextField.getText());
+                    desiredCol = new Integer(colsTextField.getText());
                     processor.zoomLinearX(desiredRow, desiredCol);
-                    processor.saveImage();
-                    BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
-                    transformedLabel.setIcon(new ImageIcon(bf));
-                    transformedLabel.setText("");
-                } catch (Exception e) {
-                    System.err.println(e + " was found");
-                }
                 break;
             case "Zoom (LinearY)":
-                try {
-                    Integer desiredRow = new Integer(rowsTextField.getText());
-                    Integer desiredCol = new Integer(colsTextField.getText());
+                    desiredRow = new Integer(rowsTextField.getText());
+                    desiredCol = new Integer(colsTextField.getText());
                     processor.zoomLinearY(desiredRow, desiredCol);
-                    processor.saveImage();
-                    BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
-                    transformedLabel.setIcon(new ImageIcon(bf));
-                    transformedLabel.setText("");
-                } catch (Exception e) {
-                    System.err.println(e + " was found");
-                }
                 break;
             case "Zoom (Bilinear)":
-                try {
-                    Integer desiredRow = new Integer(rowsTextField.getText());
-                    Integer desiredCol = new Integer(colsTextField.getText());
+                    desiredRow = new Integer(rowsTextField.getText());
+                    desiredCol = new Integer(colsTextField.getText());
                     processor.zoomBilinear(desiredRow, desiredCol);
-                    processor.saveImage();
-                    BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
-                    transformedLabel.setIcon(new ImageIcon(bf));
-                    transformedLabel.setText("");
-                } catch (Exception e) {
-                    System.err.println(e + " was found");
-                }                
                 break;
             case "Reduce Graylevel":
-                try {
                     Integer grayLevel = new Integer(bitLevelComboBox.getSelectedItem().toString());
-                    processor.reduceGraylevel(grayLevel.intValue());
-                    processor.saveImage();
-                    BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
-                    transformedLabel.setIcon(new ImageIcon(bf));
-                    transformedLabel.setText("");
-                } catch (Exception e) {
-                    System.err.println(e + " was found");
+                    processor.reduceGraylevel(grayLevel);
+                break;
+            case "Global Histogram Equalization":
+                processor.histogramEqualizationGlobal();
+                break;
+            case "Local Histogram Equalization":    
+                n = new Integer(rowsTextField.getText());
+                processor.histogramEqualizationLocal(n);
+                break;
+            case "Median Filter":    
+                n = new Integer(rowsTextField.getText());
+                processor.medianFilter(n);
+                break;
+            case "Laplacian Filter":    
+                n = new Integer(rowsTextField.getText());
+                colsStr = colsTextField.getText();
+                if (colsStr.equals("true")) {
+                    centerIsPositive = true;
+                }
+                processor.sharpeningLaplacianFilter(n, centerIsPositive, false);
+                break;
+            case "HighBoost Filter":
+                n = new Integer(rowsTextField.getText());
+                colsStr = colsTextField.getText();
+                Integer weight = new Integer(bitLevelComboBox.getSelectedItem().toString());
+                processor.highBoostingFilter(n, weight, colsStr);                
+                break;
+            case "BitPlane Removal":
+                String bitplanes = rowsTextField.getText();
+                try {
+                    String[] strArr = bitplanes.split(",");
+                    int[] numArr = new int[strArr.length];
+                    for (int i = 0; i < strArr.length; i++) {
+                        numArr[i] = Integer.parseInt(strArr[i]);                        
+                    }
+                    processor.removeBitplane(numArr);
+                } catch(Exception e) {
+                    System.out.println("Incorrect bitplane removal values");
                 }
                 break;
+            case "Smoothing Filter":    
+                n = new Integer(rowsTextField.getText());
+                colsStr = colsTextField.getText();
+                processor.smoothingFilter(n, colsStr);                
+                break;
             default: System.out.println("Please pick something correctly");
+                System.exit(0);
                 break;
         }
+        saveAndDisplay();
+
         
     }//GEN-LAST:event_applyButtonActionPerformed
 
     private void outputNameTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_outputNameTextFieldActionPerformed
+        //TODO:
         //Rename the output file.
         //processor.setOutputName(outputNameTextField.getText());
     }//GEN-LAST:event_outputNameTextFieldActionPerformed
 
-    private void rowsTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rowsTextFieldActionPerformed
-        
-    }//GEN-LAST:event_rowsTextFieldActionPerformed
+    private void algorithmComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_algorithmComboBoxActionPerformed
+        String instruction = String.valueOf(algorithmComboBox.getSelectedItem());
+        switch (instruction) {
+            case "Downscale":
+                instructionLabel.setText("<html>Instructions: For Downscale, enter the new row x column resolution in the 2 text boxes to the left of Apply.</html>");
+                break;
+            case "Zoom (LinearX)":
+                instructionLabel.setText("<html>Instructions: For LinearX, enter the new row x column resolution in the 2 text boxes to the left of Apply.</html>");
+                break;
+            case "Zoom (LinearY)":
+                instructionLabel.setText("<html>Instructions: For LinearY, enter the new row x column resolution in the 2 text boxes to the left of Apply.</html>");
+                break;
+            case "Zoom (Bilinear)":
+                instructionLabel.setText("<html>Instructions: For Bilinear, enter the new row x column resolution in the 2 text boxes to the left of Apply.</html>");
+                break;
+            case "Reduce Graylevel":
+                instructionLabel.setText("<html>Instructions: For Reducing Graylevel, use the ComboBox, to the right of the algorithm box to pick what the new bit level should reduce to from 1 to 7</html>");
+                break;
+            case "Zoom (Nearest Neighbor)":
+                instructionLabel.setText("<html>Instructions: For Nearest Neighbor, enter the new row x column resolution in the 2 text boxes to the left of Apply.</html>");
+                break;
+            case "Global Histogram Equalization":
+                instructionLabel.setText("<html>Instructions: For Global Histogram Equalization, just hit apply.</html>");
+                break;
+            case "Local Histogram Equalization":
+                instructionLabel.setText("<html>Instrutions: For Local Histogram Equalization, enter the size for the N x N mask in the first text box to the right of the number combo box.</html>");
+                break;
+            case "BitPlane Removal":
+                instructionLabel.setText("<html>Instructions: For BitPlane removal, enter the bit planes to be removed in the first text box to the right of the number combo box. Write the values separated by comma, for planes 0-7. ie: 1,4,5,7</html>");
+                break;
+            case "Median Filter":
+                instructionLabel.setText("<html>Instructions: For MedianFilter, enter the mask size N in the first textbox to the right of the number combo box.</html>");
+                break;
+            case "Laplacian Filter":
+                instructionLabel.setText("<html>Instructions: For LaplacianFilter, enter the mask size N in the first textbox to the right of the number combo box. The 2nd text box to the right, you may enter 'true' to use positive a positive center laplacian mask.</html>");
+                break;
+            case "Smoothing Filter":
+                instructionLabel.setText("<html>Instructions: For SmoothingFilter, enter the mask size N in the first textbox to the right of the number combo box. The 2nd text box to the right, enter type of smoothing filter such as 'Gaussian', 'Weighed', or 'Box'(Default)</html>");
+                break;
+            case "HighBoost Filter":
+                instructionLabel.setText("<html>Instructions: For High Boost Filter, enter the mask size N in the first textbox to the right of the number combo box. The 2nd text box to the right, enter type of smoothing filter such as 'Gaussian', 'Weighted', or 'Box' (Default). Use the number combo box to specify the weight of the mask K.</html>");
+                break;
+            default:
+                break;
+        }
+    }//GEN-LAST:event_algorithmComboBoxActionPerformed
 
     public static void main(String args[]) {
         try {
@@ -332,6 +395,7 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JButton applyButton;
     private javax.swing.JComboBox<String> bitLevelComboBox;
     private javax.swing.JTextField colsTextField;
+    private javax.swing.JLabel instructionLabel;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
