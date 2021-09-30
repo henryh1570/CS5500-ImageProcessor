@@ -11,6 +11,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class MainScreen extends javax.swing.JFrame {
 
     private Processor processor;
+    private String tempPath;
+    final String TEMP_FILENAME = "/tempimage.bmp";
     
     public MainScreen() {
         initComponents();
@@ -32,10 +34,11 @@ public class MainScreen extends javax.swing.JFrame {
         algorithmComboBox = new javax.swing.JComboBox<>();
         applyButton = new javax.swing.JButton();
         rowsTextField = new javax.swing.JTextField();
-        outputNameTextField = new javax.swing.JTextField();
         bitLevelComboBox = new javax.swing.JComboBox<>();
         colsTextField = new javax.swing.JTextField();
         instructionLabel = new javax.swing.JLabel();
+        saveButton = new javax.swing.JButton();
+        copyButton = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         originalLabel = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
@@ -68,15 +71,6 @@ public class MainScreen extends javax.swing.JFrame {
         rowsTextField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         rowsTextField.setToolTipText("Desired Rows");
 
-        outputNameTextField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        outputNameTextField.setToolTipText("Specify File output name");
-        outputNameTextField.setFocusable(false);
-        outputNameTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                outputNameTextFieldActionPerformed(evt);
-            }
-        });
-
         bitLevelComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1", "2", "3", "4", "5", "6", "7" }));
         bitLevelComboBox.setToolTipText("grayscale bit levels");
 
@@ -84,6 +78,20 @@ public class MainScreen extends javax.swing.JFrame {
         colsTextField.setToolTipText("Desired Columns");
 
         instructionLabel.setText("Instructions: For Downscale, enter the new row x column resolution in the 2 text boxes to the left of Apply.");
+
+        saveButton.setText("Save");
+        saveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveButtonActionPerformed(evt);
+            }
+        });
+
+        copyButton.setText("Copy");
+        copyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                copyButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -103,12 +111,12 @@ public class MainScreen extends javax.swing.JFrame {
                         .addComponent(colsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(applyButton)
+                        .addGap(7, 7, 7)
+                        .addComponent(copyButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(outputNameTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(instructionLabel)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(saveButton))
+                    .addComponent(instructionLabel))
+                .addContainerGap(163, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -120,7 +128,8 @@ public class MainScreen extends javax.swing.JFrame {
                     .addComponent(rowsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(colsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(applyButton)
-                    .addComponent(outputNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(saveButton)
+                    .addComponent(copyButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(instructionLabel)
                 .addGap(0, 12, Short.MAX_VALUE))
@@ -202,120 +211,104 @@ public class MainScreen extends javax.swing.JFrame {
             }
             originalLabel.setIcon(new ImageIcon(image));
             originalLabel.setText("");
-            String fileName = fileChooser.getSelectedFile().getName();
-            outputNameTextField.setText("out_"+fileName);
-            String path = fileChooser.getSelectedFile().getAbsolutePath().replaceAll(fileName, "out_"+fileName);
-            processor.setOutputName("out_" + fileName, path);
+            tempPath = fileChooser.getCurrentDirectory().getAbsolutePath() + TEMP_FILENAME;
             processor.loadImageGrayscale(fileChooser.getSelectedFile().getAbsolutePath());
         }
     }//GEN-LAST:event_openFileButtonActionPerformed
-
-    private void saveAndDisplay() {
-        try {
-            processor.saveImage();
-            BufferedImage bf = ImageIO.read(new File(processor.getOutputFilePath()));
-            transformedLabel.setIcon(new ImageIcon(bf));
-            transformedLabel.setText("");            
-        } catch (Exception e) {
-            System.err.println(e + " was found");            
-        }
-    }
     
     private void applyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyButtonActionPerformed
-        String algorithm = algorithmComboBox.getSelectedItem().toString();        
-        Integer desiredRow;
-        Integer desiredCol;
-        int n = 3;
-        boolean centerIsPositive = false;
-        String colsStr;
+        try{
+            //Extracting values from the text fields and combo boxes.
+            String algorithm = algorithmComboBox.getSelectedItem().toString();        
+            Integer desiredRow;
+            Integer desiredCol;
+            int n = 3;
+            boolean centerIsPositive = false;
+            int numComboBoxVal;
+            String colsStr;
+            boolean success = true;
         
-        switch(algorithm) {
-            case "Downscale":
+            switch(algorithm) {
+                case "Downscale":
                     desiredRow = new Integer(rowsTextField.getText());
                     desiredCol = new Integer(colsTextField.getText());
                     processor.downscale(desiredRow, desiredCol);
-                break;
-            case "Zoom (Nearest Neighbor)":
+                    break;
+                case "Zoom (Nearest Neighbor)":
                     desiredRow = new Integer(rowsTextField.getText());
                     desiredCol = new Integer(colsTextField.getText());
                     processor.zoomNearestNeighbor(desiredRow, desiredCol);
-                break;
-            case "Zoom (LinearX)":
+                    break;
+                case "Zoom (LinearX)":
                     desiredRow = new Integer(rowsTextField.getText());
                     desiredCol = new Integer(colsTextField.getText());
                     processor.zoomLinearX(desiredRow, desiredCol);
-                break;
-            case "Zoom (LinearY)":
+                    break;
+                case "Zoom (LinearY)":
                     desiredRow = new Integer(rowsTextField.getText());
                     desiredCol = new Integer(colsTextField.getText());
                     processor.zoomLinearY(desiredRow, desiredCol);
-                break;
-            case "Zoom (Bilinear)":
+                    break;
+                case "Zoom (Bilinear)":
                     desiredRow = new Integer(rowsTextField.getText());
                     desiredCol = new Integer(colsTextField.getText());
                     processor.zoomBilinear(desiredRow, desiredCol);
-                break;
-            case "Reduce Graylevel":
-                    Integer grayLevel = new Integer(bitLevelComboBox.getSelectedItem().toString());
-                    processor.reduceGraylevel(grayLevel);
-                break;
-            case "Global Histogram Equalization":
-                processor.histogramEqualizationGlobal();
-                break;
-            case "Local Histogram Equalization":    
-                n = new Integer(rowsTextField.getText());
-                processor.histogramEqualizationLocal(n);
-                break;
-            case "Median Filter":    
-                n = new Integer(rowsTextField.getText());
-                processor.medianFilter(n);
-                break;
-            case "Laplacian Filter":    
-                n = new Integer(rowsTextField.getText());
-                colsStr = colsTextField.getText();
-                if (colsStr.equals("true")) {
-                    centerIsPositive = true;
-                }
-                processor.sharpeningLaplacianFilter(n, centerIsPositive, false);
-                break;
-            case "HighBoost Filter":
-                n = new Integer(rowsTextField.getText());
-                colsStr = colsTextField.getText();
-                Integer weight = new Integer(bitLevelComboBox.getSelectedItem().toString());
-                processor.highBoostingFilter(n, weight, colsStr);                
-                break;
-            case "BitPlane Removal":
-                String bitplanes = rowsTextField.getText();
-                try {
+                    break;
+                case "Reduce Graylevel":
+                    numComboBoxVal = new Integer(bitLevelComboBox.getSelectedItem().toString());
+                    processor.reduceGraylevel(numComboBoxVal);
+                    break;
+                case "Global Histogram Equalization":
+                    processor.histogramEqualizationGlobal();
+                    break;
+                case "Local Histogram Equalization":    
+                    n = new Integer(rowsTextField.getText());
+                    processor.histogramEqualizationLocal(n);
+                    break;
+                case "Median Filter":    
+                    n = new Integer(rowsTextField.getText());
+                    processor.medianFilter(n);
+                    break;
+                case "Laplacian Filter":    
+                    n = new Integer(rowsTextField.getText());
+                    colsStr = colsTextField.getText();
+                    if (colsStr.equals("true")) {
+                        centerIsPositive = true;
+                    }
+                    processor.sharpeningLaplacianFilter(n, centerIsPositive, false);
+                    break;
+                case "HighBoost Filter":
+                    n = new Integer(rowsTextField.getText());
+                    colsStr = colsTextField.getText();
+                    numComboBoxVal = new Integer(bitLevelComboBox.getSelectedItem().toString());
+                    processor.highBoostingFilter(n, numComboBoxVal, colsStr);                
+                    break;
+                case "BitPlane Removal":
+                    String bitplanes = rowsTextField.getText();
                     String[] strArr = bitplanes.split(",");
                     int[] numArr = new int[strArr.length];
                     for (int i = 0; i < strArr.length; i++) {
                         numArr[i] = Integer.parseInt(strArr[i]);                        
                     }
                     processor.removeBitplane(numArr);
-                } catch(Exception e) {
-                    System.out.println("Incorrect bitplane removal values");
-                }
-                break;
-            case "Smoothing Filter":    
-                n = new Integer(rowsTextField.getText());
-                colsStr = colsTextField.getText();
-                processor.smoothingFilter(n, colsStr);                
-                break;
-            default: System.out.println("Please pick something correctly");
-                System.exit(0);
-                break;
-        }
-        saveAndDisplay();
-
-        
+                    break;
+                case "Smoothing Filter":    
+                    n = new Integer(rowsTextField.getText());
+                    colsStr = colsTextField.getText();
+                    processor.smoothingFilter(n, colsStr);                
+                    break;
+                default: System.out.println("Something in the algorithm combo box was chosen incorrectly");
+                    break;
+            }
+        //Save and Display
+        processor.saveImage(tempPath);
+        BufferedImage bf = ImageIO.read(new File(tempPath));
+        transformedLabel.setIcon(new ImageIcon(bf));
+        transformedLabel.setText("");
+        } catch (Exception e) {
+            System.err.println(e + " was found");
+        }        
     }//GEN-LAST:event_applyButtonActionPerformed
-
-    private void outputNameTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_outputNameTextFieldActionPerformed
-        //TODO:
-        //Rename the output file.
-        //processor.setOutputName(outputNameTextField.getText());
-    }//GEN-LAST:event_outputNameTextFieldActionPerformed
 
     private void algorithmComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_algorithmComboBoxActionPerformed
         String instruction = String.valueOf(algorithmComboBox.getSelectedItem());
@@ -364,6 +357,38 @@ public class MainScreen extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_algorithmComboBoxActionPerformed
 
+    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        fileChooser.setDialogTitle("Name the file to save");
+        FileFilter filter = new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes());        
+        fileChooser.setFileFilter(filter);
+        int result = fileChooser.showSaveDialog(this);
+        
+        if (result == JFileChooser.APPROVE_OPTION) {
+            try {
+                String path = fileChooser.getSelectedFile().getAbsolutePath();
+                processor.saveImage(path);
+            } catch (Exception e) {
+                System.err.println(e + " failed to load image.");
+            }
+        }
+    }//GEN-LAST:event_saveButtonActionPerformed
+
+    /**
+     * Copy the adjustments of the transformed image to the original image.
+     */
+    private void copyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copyButtonActionPerformed
+        processor.copyMatrix();
+        try {
+            BufferedImage bf = ImageIO.read(new File(tempPath));
+            originalLabel.setIcon(new ImageIcon(bf));
+            originalLabel.setText("");
+        } catch (Exception e) {
+            System.out.println(e + " was found during copy.");
+        }
+    }//GEN-LAST:event_copyButtonActionPerformed
+
     public static void main(String args[]) {
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -395,6 +420,7 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JButton applyButton;
     private javax.swing.JComboBox<String> bitLevelComboBox;
     private javax.swing.JTextField colsTextField;
+    private javax.swing.JButton copyButton;
     private javax.swing.JLabel instructionLabel;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
@@ -402,8 +428,8 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JButton openFileButton;
     private javax.swing.JLabel originalLabel;
-    private javax.swing.JTextField outputNameTextField;
     private javax.swing.JTextField rowsTextField;
+    private javax.swing.JButton saveButton;
     private javax.swing.JLabel transformedLabel;
     // End of variables declaration//GEN-END:variables
 }

@@ -18,28 +18,13 @@ public class Processor {
     private Mat matrix;
     private Mat outputMatrix;
     private final Imgcodecs IMAGE_CODECS;
-    private String outputName = "output";
-    private String absoluteOutputFilePath = "";
 
     //Required library intializations for image loading.
     public Processor() {
         nu.pattern.OpenCV.loadShared();
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         IMAGE_CODECS = new Imgcodecs();
-    }
-
-    public void setOutputName(String name, String path) {
-        outputName = name;
-        absoluteOutputFilePath = path;
-    }
-
-    public String getOutputFilePath() {
-        return absoluteOutputFilePath;
-    }
-
-    public String getOutputName() {
-        return outputName;
-    }
+    }    
 
     public boolean loadImageGrayscale(String fileName) {
         try {
@@ -51,22 +36,28 @@ public class Processor {
         }
         return true;
     }
+    
+    /**
+     * Internal method to change the original matrix to be the output matrix.
+     * Used for multi-step image processing on the original image.
+     */
+    public void copyMatrix() {
+        matrix = outputMatrix.clone();
+    }
 
     /**
      * Writes to disk the outputMatrix, of which does not specify a level of
      * compression and may yield a different file size than expected.
      * @return true if successful write.
-     */
-    public boolean saveImage() {
+     */    
+    public boolean saveImage(String filePath) {
         try {
-            IMAGE_CODECS.imwrite(absoluteOutputFilePath, outputMatrix);
-            outputMatrix = null;
+            IMAGE_CODECS.imwrite(filePath, outputMatrix);
         } catch (Exception e) {
             System.err.println(e + " failed to save file.");
-            outputMatrix = null;
             return false;
         }
-        return true;
+        return true;        
     }
     
     /**
@@ -537,7 +528,6 @@ public class Processor {
                 outputMatrix.put(i, j, (int)value);
             }
         }
-        blurredMatrix = null;
     }
     
     /**
