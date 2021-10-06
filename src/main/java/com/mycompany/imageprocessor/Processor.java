@@ -341,6 +341,18 @@ public class Processor {
             }
         }
     }
+    
+    /**
+     * Helper method to reduce redundancy and create a proper sized mask.
+     * @param n user defined mask size default to 3.
+     * @return 3 or any odd number higher.
+     */
+    private int getMaskSize(int n) {
+        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
+            n = 3;
+        }
+        return n;
+    }    
 
     /**
      * Helper method for laplacian and smoothing filters. Calculates current
@@ -433,10 +445,7 @@ public class Processor {
      */
     public void histogramEqualizationLocal(int size) {
         outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
-        int n = size;
-        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
-            n = 3;
-        }
+        int n = getMaskSize(size);
         final double RATIO = 255.0 / (double) (n * n);
 
         //Iterate the entire matrix
@@ -479,10 +488,7 @@ public class Processor {
      */
     public void medianFilter(int size) {
         outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
-        int n = size;
-        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
-            n = 3;
-        }
+        int n = getMaskSize(size);
 
         //Iterate the entire matrix
         for (int i = 0; i < matrix.rows(); i++) {
@@ -540,10 +546,7 @@ public class Processor {
      * setting the corresponding "diagonals" of the mask to be 0 or 1.
      */
     public void sharpeningLaplacianFilter(int size, boolean centerIsPositive, boolean diagonalsIncluded) {
-        int n = size;
-        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
-            n = 3;
-        }
+        int n = getMaskSize(size);
         
         int sign = 1;
         if (!centerIsPositive) {
@@ -564,7 +567,7 @@ public class Processor {
         }
         convolution(mask);
     }
-    
+        
     /**
      * Create a blurred version of the original image using a user
      * specified smoothing method and kernel size.
@@ -573,11 +576,7 @@ public class Processor {
      * @param type user defined method of either Gaussian, Weighted, or Box.
      */
     public void smoothingFilter(int size, String type) {
-        int n = size;
-        if (n < 3 || n % 2 == 0 || n > matrix.rows() || n > matrix.cols()) {
-            n = 3;
-        }
-        
+        int n = getMaskSize(size);
         double total = 0;
         
         double[][] mask = new double[n][n];
@@ -663,5 +662,100 @@ public class Processor {
                 outputMatrix.put(i, j, value);
             }
         }
+    }
+    
+    //---New section: Homework #3.
+    //The following filters will allow user to enter a mask resolution, default 3x3.
+    //And users allowed to enter appropriate parameters for each filter.
+    //To test, use the pre-noised images provided or optionally implement methods
+    //to add noise based on PDFs to images.
+    //Report: Show orig image, noisy image, and filter results. Show which filter
+    //is preferred for each type of noise.
+    //---/
+    
+    public void arithmeticMeanFilter() {
+        
+    }
+    
+    public void geometricMeanFilter() {
+        
+    }
+    
+    public void harmonicMeanFilter() {
+        
+    }
+    
+    public void contraharmonicMeanFilter() {
+        
+    }
+
+    /**
+     * Produces an image where every pixel is replaced with the brightest pixel
+     * of its own neighborhood/mask.
+     * @param size user defined mask size, default n = 3.
+     */    
+    public void maxFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                double largest = -1;
+                //Iterate the current pixel's neighbors
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        //Only consider non-outofbounds
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double current = matrix.get(a,b)[0];
+                            if (largest < current) {
+                                largest = current;
+                            }
+                        }
+                    }
+                }
+                //Replace current pixel value with largest found in the mask
+                outputMatrix.put(i, j, (int) largest);
+            }
+        }
+    }
+    
+    /**
+     * Produces an image where every pixel is replaced with the darkest pixel
+     * of its own neighborhood/mask.
+     * @param size user defined mask size, default n = 3.
+     */
+    public void minFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                double smallest = 987654321;
+                //Iterate the current pixel's neighbors
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        //Only consider non-outofbounds
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double current = matrix.get(a,b)[0];
+                            if (smallest > current) {
+                                smallest = current;
+                            }
+                        }
+                    }
+                }
+                //Replace current pixel value with largest found in the mask
+                outputMatrix.put(i, j, (int) smallest);
+            }
+        }        
+    }
+    
+    public void midpointFilter() {
+        
+    }
+    
+    public void alphaTrimmedMeanFilter() {
+        
     }
 }

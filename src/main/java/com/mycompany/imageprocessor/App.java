@@ -12,21 +12,18 @@ import javax.swing.JFrame;
  */
 public class App {
 
+    static final String TEMP_FILENAME = "temp%img.bmp";
+    static final String TEST_FILENAME = "lena512.bmp";
+    
     public static void main(String[] args) {
 
         //Run the GUI MainScreen
         boolean GUIoff = true;
-        if (!GUIoff) {
+        if (GUIoff) {
             Processor p = new Processor();
-            p.loadImageGrayscale("lena512.bmp");
-            p.highBoostingFilter(7, 3, "Box");
-//        p.smoothingFilter(3, "Gaussian");
-//        p.sharpeningLaplacianFilter(3, true, false);
-//        p.medianFilter(9);
-//        p.removeBitplane(new int[]{0, 1, 2, 3});
-//        p.histogramEqualizationGlobal();
-//        p.histogramEqualizationLocal(9);
-            p.saveImage("temp%img.bmp");
+            p.loadImageGrayscale(TEST_FILENAME);
+//            p.minFilter(11);
+            p.saveImage(TEMP_FILENAME);
         } else {
             try {
                 MainScreen screen = new MainScreen();

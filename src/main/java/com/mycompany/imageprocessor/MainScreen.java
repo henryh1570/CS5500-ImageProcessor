@@ -10,9 +10,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class MainScreen extends javax.swing.JFrame {
 
-    private Processor processor;
+    private final Processor processor;
     private String tempPath;
-    final String TEMP_FILENAME = "/tempimage.bmp";
+    private final String TEMP_FILENAME = "/tempimage.bmp";
     
     public MainScreen() {
         initComponents();
