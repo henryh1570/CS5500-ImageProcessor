@@ -22,8 +22,8 @@ public class App {
         if (GUIoff) {
             Processor p = new Processor();
             p.loadImageGrayscale(TEST_FILENAME);
-//            p.minFilter(11);
-            p.saveImage(TEMP_FILENAME);
+            p.alphaTrimmedMeanFilter(9, 2);
+            p.saveImage(TEMP_FILENAME);            
         } else {
             try {
                 MainScreen screen = new MainScreen();

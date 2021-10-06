@@ -495,19 +495,17 @@ public class Processor {
             for (int j = 0; j < matrix.cols(); j++) {
 
                 ArrayList<Integer> list = new ArrayList<>();
-                int count = 0;
                 //Iterate the current pixel's neighbors
                 for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
                     for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
                         if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
                             list.add((int) matrix.get(a, b)[0]);
-                            count++;
                         }
                     }
                 }
                 //Replace current value with median value
                 Collections.sort(list);
-                outputMatrix.put(i, j, list.get((1 + count) / 2));
+                outputMatrix.put(i, j, list.get((1 + list.size()) / 2));
             }
         }
     }
@@ -673,20 +671,118 @@ public class Processor {
     //is preferred for each type of noise.
     //---/
     
-    public void arithmeticMeanFilter() {
-        
+    /**
+     * Produce an image where the pixels' values are changed to be an
+     * average in consideration proportional to the size of the mask of
+     * its neighbors. Does not include out of bounds values.
+     * @param size user defined mask size n, default n = 3.
+     */
+    public void arithmeticMeanFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                //Iterate the current pixel's neighbors
+                double total = 0;
+                int count = 0;
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double val = matrix.get(a, b)[0];
+                            total += val;
+                            count++;
+                        }
+                    }
+                }
+                //Replace current value with mean value
+                outputMatrix.put(i, j, (int)(total/count));
+            }
+        }        
     }
     
-    public void geometricMeanFilter() {
-        
+    //We are not allowing out of bounds and empty neighbors.
+    public void geometricMeanFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                //Iterate the current pixel's neighbors
+                ArrayList<Double> list = new ArrayList<>();
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double val = matrix.get(a, b)[0];
+                            if (val != 0) {
+                                list.add(val);
+                            }
+                        }
+                    }
+                }                
+                //Root Product property. We can Pi the list of matrix values to the power of MxN.
+                double val = 1;
+                int count = list.size();
+                for (double d : list) {
+                    val *= Math.pow(d, 1.0/count);
+                }
+                //Replace current value with product to the m*n root
+                outputMatrix.put(i, j, (int)val);
+            }
+        }
     }
     
-    public void harmonicMeanFilter() {
-        
+    //We are not allowing out of bounds.
+    public void harmonicMeanFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                //Iterate the current pixel's neighbors
+                double total = 0;
+                int count = 0;
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double val = matrix.get(a, b)[0];
+                            total += 1.0/val;
+                            count++;
+                        }
+                    }
+                }
+                //Replace current value with the harmonic value
+                outputMatrix.put(i, j, (int)(count/total));
+            }
+        }        
     }
     
-    public void contraharmonicMeanFilter() {
-        
+    public void contraharmonicMeanFilter(int size, double q) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                //Iterate the current pixel's neighbors
+                double numeratorTotal = 0;
+                double denominatorTotal = 0;
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double val = matrix.get(a, b)[0];
+                            numeratorTotal += Math.pow(val,q+1);
+                            denominatorTotal += Math.pow(val, q);
+                        }
+                    }
+                }
+                //Replace current value with contraharmonic value
+                outputMatrix.put(i, j, (int)(numeratorTotal/denominatorTotal));
+            }
+        }
     }
 
     /**
@@ -751,11 +847,82 @@ public class Processor {
         }        
     }
     
-    public void midpointFilter() {
-        
+    /**
+     * Produces an image where each pixel's value is replaced with the
+     * midpoint of the min and max value found in its neighborhood.
+     * @param size user defined mask of size n, default n = 3.
+     */
+    public void midpointFilter(int size) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                double smallest = 987654321;
+                double largest = -1;
+                //Iterate the current pixel's neighbors
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        //Only consider non-outofbounds
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double current = matrix.get(a,b)[0];
+                            if (smallest > current) {
+                                smallest = current;
+                            }
+                            if (largest < current) {
+                                largest = current;
+                            }
+                        }
+                    }
+                }
+                //Replace current pixel value with calculated midpoint
+                outputMatrix.put(i, j, (int)((largest+smallest)/2));
+            }
+        }        
     }
     
-    public void alphaTrimmedMeanFilter() {
+    //User can specify d # of lowest and highest trimms.
+    public void alphaTrimmedMeanFilter(int size, int d) {
+        outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+        int n = getMaskSize(size);
         
+        if (d >= n) {
+            d = 1;
+        }
+
+        //Iterate the entire matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                //Iterate the current pixel's neighbors
+                ArrayList<Double> list = new ArrayList<>();
+                for (int a = (i - (n / 2)); a < (1 + i + (n / 2)); a++) {
+                    for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
+                        if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
+                            double val = matrix.get(a, b)[0];
+                            if (val != 0) {
+                                list.add(val);
+                            }
+                        }
+                    }
+                }
+                
+                //Order the list, remove the lowest and highest values
+                //Then take the mean of the new list.
+                Collections.sort(list);
+                for (int c = 0; c < d; c++) {
+                    list.remove(list.size()-1);
+                    list.remove(0);
+                }
+                double total = 0;
+                for (double num : list) {
+                    total += num;
+                }
+                double val = (total/(double)list.size());
+                
+                //Replace current value with the alpha-trimmed mean
+                outputMatrix.put(i, j, (int) val);
+            }
+        }        
     }
 }
