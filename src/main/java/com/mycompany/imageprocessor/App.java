@@ -22,7 +22,7 @@ public class App {
         if (GUIoff) {
             Processor p = new Processor();
             p.loadImageGrayscale(TEST_FILENAME);
-            p.alphaTrimmedMeanFilter(9, 2);
+            p.addNoise("gaussian");
             p.saveImage(TEMP_FILENAME);            
         } else {
             try {

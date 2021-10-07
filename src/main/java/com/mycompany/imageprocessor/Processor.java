@@ -925,4 +925,97 @@ public class Processor {
             }
         }        
     }
+    
+    //TODO: Allow user to specify standard dev, mean, noise ratio
+    public void addNoise(String type) {
+        double stdDev;
+        double mean;
+        
+        switch (type) {
+            case "saltpepper":
+                outputMatrix = matrix.clone();
+                int numOfNoise = (int)(0.1*matrix.rows()*matrix.cols());
+                //Set the S&P ammount/ratios.
+                double ratioOfSalt = 0.45;
+                int numOfSalt = (int)(numOfNoise*ratioOfSalt);
+                int numOfPepper = Math.abs(numOfNoise - numOfSalt);
+                int size = matrix.rows()*matrix.cols();
+                //Populate a list with the salt and pepper indicies, and randomize.
+                ArrayList<Integer> list = new ArrayList<>(Collections.nCopies(size-numOfSalt-numOfPepper, 0));
+                for (int i = 0; i < numOfSalt; i++) {
+                    list.add(1);
+                }
+                for (int i = 0; i < numOfPepper; i++) {
+                    list.add(2);
+                }
+                Collections.shuffle(list);
+                
+                //Modify the original image based on the S&P indicies.
+                int count = 0;
+                for (int i = 0; i < matrix.rows(); i++) {
+                    for (int j = 0; j < matrix.cols(); j++) {
+                        if (list.get(count) == 1) {
+                            outputMatrix.put(i, j, 255);
+                        }
+                        if (list.get(count) == 2) {
+                            outputMatrix.put(i, j, 0);
+                        }
+                        count++;
+                    }
+                }                
+                break;
+            case "poisson":
+                //Donald Knuth's Poisson approximation method
+                //Not as preferrable for lambdas > 30
+                outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+                for (int i = 0; i < matrix.rows(); i++) {
+                    for (int j = 0; j < matrix.cols(); j++) {
+                        double lambda = matrix.get(i,j)[0];
+                        
+                        int k = 0;
+                        double e = Math.exp(-lambda);
+                        double prod = 1;
+                        //Count the steps of arrival in the intervals 
+                        //of the exponential distribution                        
+                        do {
+                            k++;
+                            prod *= Math.random();
+                        } while (prod >= e);
+                        double poissonVal = (k-1);
+                        outputMatrix.put(i, j, poissonVal);
+                    }
+                }
+                break;
+            case "gaussian":
+                outputMatrix = matrix.clone();
+                stdDev = 5;
+                mean = 0;        
+                org.opencv.core.Core.randn(outputMatrix, mean, stdDev);
+                //Add the gauss values to the original image.
+                for (int i = 0; i < matrix.rows(); i++) {
+                    for (int j = 0; j < matrix.cols(); j++) {
+                        double d1 = outputMatrix.get(i, j)[0];
+                        double d2 = matrix.get(i, j)[0];
+                        outputMatrix.put(i,j, (int)(d1+d2));
+                    }
+                }
+                break;
+            case "speckle":
+                outputMatrix = matrix.clone();
+                stdDev = 1;
+                mean = 0;        
+                org.opencv.core.Core.randn(outputMatrix, mean, stdDev);
+                //Add the weighted speckle values to orig
+                for (int i = 0; i < matrix.rows(); i++) {
+                    for (int j = 0; j < matrix.cols(); j++) {
+                        double d1 = outputMatrix.get(i, j)[0];
+                        double d2 = matrix.get(i, j)[0];
+                        outputMatrix.put(i,j, (int)(d2 + (d1*d2)));
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }
