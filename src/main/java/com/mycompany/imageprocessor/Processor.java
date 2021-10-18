@@ -661,16 +661,7 @@ public class Processor {
             }
         }
     }
-    
-    //---New section: Homework #3.
-    //The following filters will allow user to enter a mask resolution, default 3x3.
-    //And users allowed to enter appropriate parameters for each filter.
-    //To test, use the pre-noised images provided or optionally implement methods
-    //to add noise based on PDFs to images.
-    //Report: Show orig image, noisy image, and filter results. Show which filter
-    //is preferred for each type of noise.
-    //---/
-    
+        
     /**
      * Produce an image where the pixels' values are changed to be an
      * average in consideration proportional to the size of the mask of
@@ -702,7 +693,7 @@ public class Processor {
         }        
     }
     
-    //We are not allowing out of bounds and empty neighbors.
+    //We are not allowing out of bounds, but "black" pixel neighbors are allowed.
     public void geometricMeanFilter(int size) {
         outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
         int n = getMaskSize(size);
@@ -716,9 +707,9 @@ public class Processor {
                     for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
                         if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
                             double val = matrix.get(a, b)[0];
-                            if (val != 0) {
+//                            if (val != 0) {
                                 list.add(val);
-                            }
+//                            }
                         }
                     }
                 }                
@@ -900,9 +891,7 @@ public class Processor {
                     for (int b = (j - (n / 2)); b < (1 + j + (n / 2)); b++) {
                         if (a >= 0 && b >= 0 && a < matrix.rows() && b < matrix.cols()) {
                             double val = matrix.get(a, b)[0];
-                            if (val != 0) {
-                                list.add(val);
-                            }
+                            list.add(val);
                         }
                     }
                 }
@@ -926,15 +915,58 @@ public class Processor {
         }        
     }
     
-    //TODO: Allow user to specify standard dev, mean, noise ratio
+    //Simpler overloaded method taking only the noise type parameter.
+    //Defaulting to 10% noise, 5 standard deviations, and a mean of 0.
     public void addNoise(String type) {
-        double stdDev;
-        double mean;
+        addNoise(type, 0.1, 5, 0);
+    }
+    
+    //TODO: Allow user to specify standard dev, mean, noise ratio
+    public void addNoise(String type, double nRatio, double std, double m) {
+        double stdDev = std;
+        double mean = m;
+        double noiseRatio = nRatio; //N=0.1 or 0.05
         
         switch (type) {
+            case "salt":
+                outputMatrix = matrix.clone();
+                int numOfSaltOnly = (int)(noiseRatio*matrix.rows()*matrix.cols());
+                ArrayList<Integer> saltList = new ArrayList<>(Collections.nCopies((matrix.rows()*matrix.cols())-numOfSaltOnly, 0));
+                for (int i = 0; i < numOfSaltOnly; i++) {
+                    saltList.add(1);
+                }
+                Collections.shuffle(saltList);
+                int current = 0;
+                for (int i = 0; i < matrix.rows(); i++) {
+                    for (int j = 0; j < matrix.cols(); j++) {
+                        if (saltList.get(current) == 1) {
+                            outputMatrix.put(i, j, 255);
+                        }
+                        current++;
+                    }
+                }
+                break;
+            case "pepper":
+                outputMatrix = matrix.clone();
+                int numOfPepperOnly = (int)(noiseRatio*matrix.rows()*matrix.cols());
+                ArrayList<Integer> pepperList = new ArrayList<>(Collections.nCopies((matrix.rows()*matrix.cols())-numOfPepperOnly, 0));
+                for (int i = 0; i < numOfPepperOnly; i++) {
+                    pepperList.add(1);
+                }
+                Collections.shuffle(pepperList);
+                int index = 0;
+                for (int i = 0; i < matrix.rows(); i++) {
+                    for (int j = 0; j < matrix.cols(); j++) {
+                        if (pepperList.get(index) == 1) {
+                            outputMatrix.put(i, j, 0);
+                        }
+                        index++;
+                    }
+                }
+                break;
             case "saltpepper":
                 outputMatrix = matrix.clone();
-                int numOfNoise = (int)(0.1*matrix.rows()*matrix.cols());
+                int numOfNoise = (int)(noiseRatio*matrix.rows()*matrix.cols());
                 //Set the S&P ammount/ratios.
                 double ratioOfSalt = 0.45;
                 int numOfSalt = (int)(numOfNoise*ratioOfSalt);

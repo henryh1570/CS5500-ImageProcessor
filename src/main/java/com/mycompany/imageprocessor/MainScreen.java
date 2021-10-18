@@ -54,7 +54,7 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
-        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel", "Global Histogram Equalization", "Local Histogram Equalization", "Median Filter", "Laplacian Filter", "Smoothing Filter", "HighBoost Filter", "BitPlane Removal" }));
+        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel", "Global Histogram Equalization", "Local Histogram Equalization", "Median Filter", "Laplacian Filter", "Smoothing Filter", "HighBoost Filter", "BitPlane Removal", "Arithmetic Mean Filter", "Geometric Mean Filter", "Harmonic Mean Filter", "Contraharmonic Mean Filter", "Max Filter", "Min Filter", "Midpoint Filter", "Alpha-trimmed Mean Filter" }));
         algorithmComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 algorithmComboBoxActionPerformed(evt);
@@ -297,6 +297,43 @@ public class MainScreen extends javax.swing.JFrame {
                     colsStr = colsTextField.getText();
                     processor.smoothingFilter(n, colsStr);                
                     break;
+                case "Arithmetic Mean Filter":
+                    n = new Integer(rowsTextField.getText());
+                    processor.arithmeticMeanFilter(n);
+                    break;
+                case "Geometric Mean Filter":
+                    n = new Integer(rowsTextField.getText());
+                    processor.geometricMeanFilter(n);
+                    break;
+                case "Harmonic Mean Filter":
+                    n = new Integer(rowsTextField.getText());
+                    processor.harmonicMeanFilter(n);
+                    break;
+                case "Contraharmonic Mean Filter":
+                    n = new Integer(rowsTextField.getText());
+                    int q = new Integer(colsTextField.getText());
+                    processor.contraharmonicMeanFilter(n, q);
+                    break;
+                case "Max Filter":
+                    n = new Integer(rowsTextField.getText());
+                    processor.maxFilter(n);
+                    break;
+                case "Min Filter":
+                    n = new Integer(rowsTextField.getText());
+                    processor.minFilter(n);
+                    break;
+                case "Midpoint Filter":
+                    n = new Integer(rowsTextField.getText());
+                    processor.midpointFilter(n);
+                    break;
+                case "Alpha-trimmed Mean Filter":
+                    n = new Integer(rowsTextField.getText());
+                    int d = new Integer(colsTextField.getText());
+                    processor.alphaTrimmedMeanFilter(n, d);
+                    break;
+                case "Add Noise":
+                    processor.addNoise(rowsTextField.getText());
+                    break;
                 default: System.out.println("Something in the algorithm combo box was chosen incorrectly");
                     break;
             }
@@ -351,6 +388,34 @@ public class MainScreen extends javax.swing.JFrame {
                 break;
             case "HighBoost Filter":
                 instructionLabel.setText("<html>Instructions: For High Boost Filter, enter the mask size N in the first textbox to the right of the number combo box. The 2nd text box to the right, enter type of smoothing filter such as 'Gaussian', 'Weighted', or 'Box' (Default). Use the number combo box to specify the weight of the mask K.</html>");
+                break;
+            case "Arithmetic Mean Filter":
+                instructionLabel.setText("<html>Instructions: For Arithmetic Mean Filter, enter the mask size N in the first textbox to the right of the number combo box.</html>");
+                break;
+            case "Geometric Mean Filter":
+                instructionLabel.setText("<html>Instructions: For Geometric Mean Filter, enter the mask size N in the first textbox to the right of the number combo box.</html>");
+                break;
+            case "Harmonic Mean Filter":
+                instructionLabel.setText("<html>Instructions: For Harmonic Mean Filter, enter the mask size N in the first textbox to the right of the number combo box.</html>");
+                break;
+            case "Contraharmonic Mean Filter":
+                instructionLabel.setText("<html>Instructions: For Contraharmonic Mean Filter, enter the mask size N in the first textbox to the right of the number combo box. The 2nd text box to the right, enter the value of q.</html>");
+                break;
+            case "Max Filter":
+                instructionLabel.setText("<html>Instructions: For Max Filter, enter the mask size N in the first textbox to the right of the number combo box.</html>");
+                break;
+            case "Min Filter":
+                instructionLabel.setText("<html>Instructions: For Min Filter, enter the mask size N in the first textbox to the right of the number combo box.</html>");
+                break;
+            case "Midpoint Filter":
+                instructionLabel.setText("<html>Instructions: For Midpoint Filter, enter the mask size N in the first textbox to the right of the number combo box.</html>");
+                break;
+            case "Alpha-trimmed Mean Filter":
+                instructionLabel.setText("<html>Instructions: For Alpha-trimmed Filter, enter the mask size N in the first textbox to the right of the number combo box. The 2nd text box to the right, enter the d ammount of outlier-pairs to trim.</html>");
+                break;
+            case "Add Noise":
+                instructionLabel.setText("<html>Instructions: Add Noise, enter the type of noise to use in the first text box to the right of the number combo box ('salt', 'pepper', saltpepper', 'poisson', 'speckle'"
+                        + ", or 'gaussian').</html>");
                 break;
             default:
                 break;

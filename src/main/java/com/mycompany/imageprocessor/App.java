@@ -18,11 +18,12 @@ public class App {
     public static void main(String[] args) {
 
         //Run the GUI MainScreen
-        boolean GUIoff = true;
+        boolean GUIoff = false;
         if (GUIoff) {
             Processor p = new Processor();
             p.loadImageGrayscale(TEST_FILENAME);
-            p.addNoise("gaussian");
+//            p.addNoise("gaussian", 0.1, 5, 0);
+            p.alphaTrimmedMeanFilter(5, 2);
             p.saveImage(TEMP_FILENAME);            
         } else {
             try {
