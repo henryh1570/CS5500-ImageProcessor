@@ -54,7 +54,7 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
-        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel", "Global Histogram Equalization", "Local Histogram Equalization", "Median Filter", "Laplacian Filter", "Smoothing Filter", "HighBoost Filter", "BitPlane Removal", "Arithmetic Mean Filter", "Geometric Mean Filter", "Harmonic Mean Filter", "Contraharmonic Mean Filter", "Max Filter", "Min Filter", "Midpoint Filter", "Alpha-trimmed Mean Filter" }));
+        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel", "Global Histogram Equalization", "Local Histogram Equalization", "Median Filter", "Laplacian Filter", "Smoothing Filter", "HighBoost Filter", "BitPlane Removal", "Arithmetic Mean Filter", "Geometric Mean Filter", "Harmonic Mean Filter", "Contraharmonic Mean Filter", "Max Filter", "Min Filter", "Midpoint Filter", "Alpha-trimmed Mean Filter", "Add Noise" }));
         algorithmComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 algorithmComboBoxActionPerformed(evt);
