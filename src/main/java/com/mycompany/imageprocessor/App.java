@@ -13,18 +13,23 @@ import javax.swing.JFrame;
 public class App {
 
     static final String TEMP_FILENAME = "temp%img.bmp";
-    static final String TEST_FILENAME = "lena512.bmp";
+    static final String TEST_FILENAME = "ruler.tiff";
     
     public static void main(String[] args) {
 
         //Run the GUI MainScreen
-        boolean GUIoff = false;
+        boolean GUIoff = true;
         if (GUIoff) {
             Processor p = new Processor();
             p.loadImageGrayscale(TEST_FILENAME);
-//            p.addNoise("gaussian", 0.1, 5, 0);
-            p.alphaTrimmedMeanFilter(5, 2);
-            p.saveImage(TEMP_FILENAME);            
+            p.compressRLEGV("compressedfile");
+            p.decompressRLEGV("compressedfile");
+            try{
+                Thread.sleep(3000);
+            }catch(Exception e) {
+                
+            }
+            p.saveImage("easy.tiff");
         } else {
             try {
                 MainScreen screen = new MainScreen();

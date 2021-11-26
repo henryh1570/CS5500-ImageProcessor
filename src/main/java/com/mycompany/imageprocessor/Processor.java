@@ -1,8 +1,14 @@
 package com.mycompany.imageprocessor;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import org.opencv.core.Core;
 import static org.opencv.core.CvType.CV_8UC1;
 import org.opencv.core.Mat;
@@ -1050,4 +1056,132 @@ public class Processor {
                 break;
         }
     }
+    
+    // Read every grayscale val and store it in bits.
+    // User header to denote MN dimensions; separate lines of N
+    public void compressRLEGV(String fileName) {
+        try {
+            File f = new File(fileName);
+            PrintWriter pw = new PrintWriter(f);
+            int count;          //Track consecutives.
+            int previousSymbol; //Track the reoccuring symbol or value.
+            final char FLAG = '!';
+            final char NEWLINE = '\n';
+            final char SEPARATOR = ' ';
+            
+            //Iterate the entire matrix
+            for (int i = 0; i < matrix.rows(); i++) {
+                previousSymbol = (int) matrix.get(i, 0)[0];
+                count = 0;
+                
+                for (int j = 1; j < matrix.cols(); j++) {
+                    int currentSymbol = (int) matrix.get(i, j)[0];
+
+                    // Same symbol, count and move to next.
+                    if (previousSymbol == currentSymbol) {
+                        count++;
+                    } else {//A diff symbol found, write the previous.
+                        if (count > 0) {
+                            pw.write(""+previousSymbol+""+FLAG+""+(count+1)+""+SEPARATOR);
+                        } else {// otherise, write Symbol Symbol.
+                            pw.write(""+previousSymbol+""+SEPARATOR);
+                        }
+                        count = 0;
+                        previousSymbol = currentSymbol;
+                    }
+                }
+                //This is where the row ends. Write what we have.
+                if (count > 0) {
+                    pw.write(""+previousSymbol+""+FLAG+""+(count+1)+""+SEPARATOR);
+                } else {// otherise, write Symbol Symbol.
+                    pw.write(""+previousSymbol+""+SEPARATOR);
+                }
+                //New Line
+                pw.write(NEWLINE);
+            }
+            pw.close();
+        } catch (Exception e) {
+            System.err.println(e + " was found trying to write to file.");
+        }
+    }
+    
+    public void decompressRLEGV(String fileName) {
+        try {
+            outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+            File f = new File(fileName);
+            FileInputStream fis = new FileInputStream(f);
+            
+            byte[] data = fis.readAllBytes();
+            ArrayList<Character> list = new ArrayList<>();
+            for (int i = 0; i+1 < data.length; i+=2) {
+                byte byteOne =  data[i];
+                byte byteTwo = data[i+1];
+                char currentChar = (char) ((byteTwo << 8) + byteOne);
+                list.add(currentChar);
+            }
+            
+            final char FLAG = '!';
+            final char NEWLINE = '\n';
+            final char SEPARATOR = ' ';
+            
+            int a = 0;
+            int b = 0;
+            
+            boolean lookingForPower = false;
+            String valToLoop = "";
+            String line = "";
+            
+            for (int i = 0; i < list.size(); i++) {
+                char c = list.get(i);
+                
+                if (c == FLAG) {
+                    valToLoop = line;
+                    line = "";
+                    lookingForPower = true;
+                } else if (c == SEPARATOR) {
+                    if (!lookingForPower) {
+                        int val = Integer.parseInt(line);
+                        outputMatrix.put(a, b, val);
+                        b++;
+                    } else {
+                        int iterations = Integer.parseInt(line);
+                        int val = Integer.parseInt(valToLoop);
+                        for (int z = 0; z < iterations; z++) {
+                            outputMatrix.put(a, b, val);
+                            b++;
+                        }
+                    }
+                    valToLoop="";
+                    line="";
+                    lookingForPower = false;
+                } else if (c == NEWLINE) {
+                    line="";
+                    a++;
+                    b=0;
+                } else { //c=#
+                    line += c;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e + " was found trying to read compressed img.");
+        }
+    }
+    
+    //Run-Length Encoding BitPlane
+    public void compressRLEBP() {
+        
+    }
+    
+    public void decompressRLEBP() {
+        
+    }
+    
+    public void compressHuffman() {
+        
+    }
+    
+    public void decompressHuffman() {
+        
+    }    
+    
 }
