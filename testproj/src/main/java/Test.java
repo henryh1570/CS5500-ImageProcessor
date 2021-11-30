@@ -3,13 +3,47 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
+import java.util.HashSet;
 
 public class Test {
 
     public static void main(String[] args) {
 
         System.out.println("testing");
+        
+        int n = 512;
+        ArrayList<String> list = new ArrayList<>();
+        
+        for (int x = 0; x < n; x++) {
+            for (int y = 0; y < n; y++) {
+                int xp = (x+y) % n;
+                int yp = (x+2*y) % n;
+                String str = (""+xp+","+yp);
+                
+                if (list.contains(str)) {
+                    System.out.println("CLONE: " + str);
+                    System.exit(0);
+                } else {
+                    list.add(str);
+                    System.out.println(x);
+                }
+            }
+        }
+        
+        Collections.sort(list);
+        
+        for (String str: list) {
+            System.out.println(str);
+        }
+        
+//        int val = 8;
+//        int pos = 3;
+        
+//        System.out.println("the bit of 8 at pos 3 is : " + ((8 >> 3)&1));
+        /*
         try {
             File f = new File("codedfile.txt");
             FileOutputStream fos = new FileOutputStream(f);

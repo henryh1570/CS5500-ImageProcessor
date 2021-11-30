@@ -1,11 +1,13 @@
 package com.mycompany.imageprocessor;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1068,7 +1070,7 @@ public class Processor {
             final char FLAG = '!';
             final char NEWLINE = '\n';
             final char SEPARATOR = ' ';
-            
+
             //Iterate the entire matrix
             for (int i = 0; i < matrix.rows(); i++) {
                 previousSymbol = (int) matrix.get(i, 0)[0];
@@ -1107,17 +1109,21 @@ public class Processor {
     
     public void decompressRLEGV(String fileName) {
         try {
+            String str = "";
             outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
             File f = new File(fileName);
-            FileInputStream fis = new FileInputStream(f);
+            FileReader fr = new FileReader(f);
+            BufferedReader br = new BufferedReader(fr);
             
-            byte[] data = fis.readAllBytes();
+            String strReader = "";
+            while (strReader != null) {
+                strReader = br.readLine();
+                str += strReader;
+                str += '\n'; //BufferedReader eats the newline.add it back in.
+            }
             ArrayList<Character> list = new ArrayList<>();
-            for (int i = 0; i+1 < data.length; i+=2) {
-                byte byteOne =  data[i];
-                byte byteTwo = data[i+1];
-                char currentChar = (char) ((byteTwo << 8) + byteOne);
-                list.add(currentChar);
+            for (char ch : str.toCharArray()) {
+                list.add(ch);
             }
             
             final char FLAG = '!';
@@ -1133,6 +1139,7 @@ public class Processor {
             
             for (int i = 0; i < list.size(); i++) {
                 char c = list.get(i);
+                str += c;
                 
                 if (c == FLAG) {
                     valToLoop = line;
@@ -1160,16 +1167,90 @@ public class Processor {
                     b=0;
                 } else { //c=#
                     line += c;
-                }
+                }                
             }
+            File f2 = new File("testdecomp.txt");
+            PrintWriter pw = new PrintWriter(f2);
+            pw.write(str);
+            pw.close();
         } catch (Exception e) {
             System.err.println(e + " was found trying to read compressed img.");
         }
     }
     
+    private int getGrayCode(int num) {
+        int gray = num ^ (num >> 1);
+        return gray;
+    }
+    
+    private int getNumFromGrayCode(int gray) {
+        int num = gray;
+        int mask = gray;
+        while (mask > 0) {
+            mask >>= 1;
+            num ^= mask;
+        }
+        return num;
+    }
+    
+    private int getBit(int index, int val) {
+        return (val >> index) & 1;
+    }
+    
     //Run-Length Encoding BitPlane
     public void compressRLEBP() {
         
+        int[][] bitPlane0 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane1 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane2 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane3 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane4 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane5 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane6 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane7 = new int[matrix.rows()][matrix.cols()];
+        int[][][] grayBp = {bitPlane0, bitPlane1, bitPlane2, bitPlane3, bitPlane4, bitPlane5, bitPlane6, bitPlane7};
+        
+        // Get the graycoded matrix
+        for (int i = 0; i < matrix.rows(); i++) {
+            for (int j = 0; j < matrix.cols(); j++) {
+                int val = (int)matrix.get(i, j)[0];
+                int grayVal = getGrayCode(val);
+                grayBp[0][i][j] = getBit(0, val);
+                grayBp[1][i][j] = getBit(1, val);
+                grayBp[2][i][j] = getBit(2, val);
+                grayBp[3][i][j] = getBit(3, val);
+                grayBp[4][i][j] = getBit(4, val);
+                grayBp[5][i][j] = getBit(5, val);
+                grayBp[6][i][j] = getBit(6, val);
+                grayBp[7][i][j] = getBit(7, val);
+            }
+        }
+                
+        // Binary-RLE, will assume 0 is starting value.
+        int count = 0;
+        int target = 0;
+        //Every bitplane 0 - 7
+        for (int b = 0; b < grayBp.length; b++) {
+            //Every pixel val 512 * 512
+            for (int i = 0; i < grayBp[b].length; i++) {
+                for (int j = 0; j < grayBp[b][i].length; j++) {
+                    int val = grayBp[b][i][j];
+                    
+                    if (val == target) {
+                        count++;
+                    } else {
+                        //Write target, empty count, flip target.
+                        //TODO: Write to file.
+                        target = target ^ 1;
+                        count = 0;
+                    }
+                }
+                //Write target. Write NEWLINE, empty count, flip target.
+                //TODO: Write to file, and write NEWLINE.
+                target = target ^ 1;
+                count = 0;
+            }
+        }
     }
     
     public void decompressRLEBP() {

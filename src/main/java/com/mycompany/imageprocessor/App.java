@@ -13,7 +13,7 @@ import javax.swing.JFrame;
 public class App {
 
     static final String TEMP_FILENAME = "temp%img.bmp";
-    static final String TEST_FILENAME = "ruler.tiff";
+    static final String TEST_FILENAME = "wedges.tiff";
     
     public static void main(String[] args) {
 
@@ -22,13 +22,10 @@ public class App {
         if (GUIoff) {
             Processor p = new Processor();
             p.loadImageGrayscale(TEST_FILENAME);
+            
+//            p.compressRLEBP();
             p.compressRLEGV("compressedfile");
             p.decompressRLEGV("compressedfile");
-            try{
-                Thread.sleep(3000);
-            }catch(Exception e) {
-                
-            }
             p.saveImage("easy.tiff");
         } else {
             try {
