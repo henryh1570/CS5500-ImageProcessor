@@ -1198,7 +1198,7 @@ public class Processor {
     }
     
     //Run-Length Encoding BitPlane
-    public void compressRLEBP() {
+    public void compressRLEBP(String filename) {
         
         int[][] bitPlane0 = new int[matrix.rows()][matrix.cols()];
         int[][] bitPlane1 = new int[matrix.rows()][matrix.cols()];
@@ -1215,46 +1215,180 @@ public class Processor {
             for (int j = 0; j < matrix.cols(); j++) {
                 int val = (int)matrix.get(i, j)[0];
                 int grayVal = getGrayCode(val);
-                grayBp[0][i][j] = getBit(0, val);
-                grayBp[1][i][j] = getBit(1, val);
-                grayBp[2][i][j] = getBit(2, val);
-                grayBp[3][i][j] = getBit(3, val);
-                grayBp[4][i][j] = getBit(4, val);
-                grayBp[5][i][j] = getBit(5, val);
-                grayBp[6][i][j] = getBit(6, val);
-                grayBp[7][i][j] = getBit(7, val);
+                grayBp[0][i][j] = getBit(0, grayVal);
+                grayBp[1][i][j] = getBit(1, grayVal);
+                grayBp[2][i][j] = getBit(2, grayVal);
+                grayBp[3][i][j] = getBit(3, grayVal);
+                grayBp[4][i][j] = getBit(4, grayVal);
+                grayBp[5][i][j] = getBit(5, grayVal);
+                grayBp[6][i][j] = getBit(6, grayVal);
+                grayBp[7][i][j] = getBit(7, grayVal);
             }
         }
+        
+        final char NEWLINE = '\n';
+        final char SEPARATOR = ' ';
+        final char FLAG = '!';
+        final char BITPLANE_END = 'b';
                 
-        // Binary-RLE, will assume 0 is starting value.
-        int count = 0;
-        int target = 0;
-        //Every bitplane 0 - 7
-        for (int b = 0; b < grayBp.length; b++) {
-            //Every pixel val 512 * 512
-            for (int i = 0; i < grayBp[b].length; i++) {
-                for (int j = 0; j < grayBp[b][i].length; j++) {
-                    int val = grayBp[b][i][j];
-                    
-                    if (val == target) {
-                        count++;
-                    } else {
-                        //Write target, empty count, flip target.
-                        //TODO: Write to file.
-                        target = target ^ 1;
-                        count = 0;
+        try {
+            File f = new File(filename);
+            PrintWriter pw = new PrintWriter(f);
+
+            // Binary-RLE, will assume 0 is starting value.
+            int count = 0;
+            int target = 0;
+            //Every bitplane 0 - 7
+            for (int b = 0; b < grayBp.length; b++) {
+                //Every pixel val 512 * 512
+                for (int i = 0; i < grayBp[b].length; i++) {
+                    for (int j = 0; j < grayBp[b][i].length; j++) {
+                        int val = grayBp[b][i][j];
+
+                        if (val == target) {
+                            count++;
+                        } else {
+                            //Write target, empty count, flip target.
+                            pw.write(target + "" + FLAG + "" + count + "" + SEPARATOR);
+                            target = target ^ 1;
+                            count = 0;
+                        }
                     }
+                    //Write target. Write NEWLINE, empty count, target begins back on 0.
+                    pw.write(target + "" + FLAG + "" + count + "" + SEPARATOR);
+                    target = 0;
+                    count = 0;
+                    pw.write(NEWLINE);
                 }
-                //Write target. Write NEWLINE, empty count, flip target.
-                //TODO: Write to file, and write NEWLINE.
-                target = target ^ 1;
-                count = 0;
+                //Always after a newline.
+                pw.write(BITPLANE_END);
             }
+            pw.close();
+        } catch (Exception e) {
+            System.err.println(e + " was found trying to compress bit planes.");
         }
     }
     
-    public void decompressRLEBP() {
-        
+    public void decompressRLEBP(String filename) {
+        //Need to manually store dimensions of compressed image.
+        int[][] bitPlane0 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane1 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane2 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane3 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane4 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane5 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane6 = new int[matrix.rows()][matrix.cols()];
+        int[][] bitPlane7 = new int[matrix.rows()][matrix.cols()];
+        int[][][] grayBp = {bitPlane0, bitPlane1, bitPlane2, bitPlane3, bitPlane4, bitPlane5, bitPlane6, bitPlane7};
+
+        try {
+            File f = new File(filename);
+            FileReader fr = new FileReader(f);
+            BufferedReader br = new BufferedReader(fr);
+
+            String str = "";
+            String strReader = "";
+            
+            while (strReader != null) {
+                strReader = br.readLine();
+                str += strReader;
+                str += '\n'; //BufferedReader eats the newline.add it back in.
+            }
+            ArrayList<Character> list = new ArrayList<>();
+            for (char ch : str.toCharArray()) {
+                list.add(ch);
+            }
+            
+            final char FLAG = '!';
+            final char NEWLINE = '\n';
+            final char SEPARATOR = ' ';
+            final char BITPLANE_END = 'b';
+            
+            int a = 0; //row
+            int b = 0; //col
+            int bp = 0;//Bit-plane
+            
+            boolean lookingForPower = false;
+            String valToLoop = "";
+            String line = "";
+            for (int i = 0; i < list.size(); i++) {
+                char c = list.get(i);
+                str += c;
+
+                if (c == FLAG) {
+                    valToLoop = line;
+                    line = "";
+                    lookingForPower = true;
+                } else if (c == SEPARATOR) {
+                    if (!lookingForPower) {
+                        int val = Integer.parseInt(line);
+                        grayBp[bp][a][b] = val;
+                        b++;
+                    } else {
+                        int iterations = Integer.parseInt(line);
+                        int val = Integer.parseInt(valToLoop);
+                        for (int z = 0; z < iterations; z++) {
+                        grayBp[bp][a][b] = val;
+                            b++;
+                        }
+                    }
+                    valToLoop="";
+                    line="";
+                    lookingForPower = false;
+                } else if (c == NEWLINE) {
+                    line="";
+                    a++;
+                    b=0;
+                } else if (c == BITPLANE_END) {
+                    //BITPLANE_END is always after a newline
+                    a=0;
+                    b=0;
+                    bp++;
+                } else {// Continue recording number-char
+                    line += c;                    
+                }
+            }
+            br.close();
+
+
+            outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
+            //All GrayBitPlanes reinitialized now.
+            for(int i = 0; i < matrix.rows(); i++) {
+                for (int j = 0; j < matrix.cols(); j++) {
+                    String strVal = "";
+                    strVal += grayBp[7][i][j];
+                    strVal += grayBp[6][i][j];
+                    strVal += grayBp[5][i][j];
+                    strVal += grayBp[4][i][j];
+                    strVal += grayBp[3][i][j];
+                    strVal += grayBp[2][i][j];
+                    strVal += grayBp[1][i][j];
+                    strVal += grayBp[0][i][j];
+                    int val = Integer.parseInt(strVal);
+                    int pixelVal = getNumFromGrayCode(val);
+                    outputMatrix.put(i, j, pixelVal);
+                }
+            }
+            
+            
+/*            
+            for (int s = 0; s < grayBp.length; s++) {
+                for (int t = 0; t < grayBp[s].length; t++) {
+                    for (int u = 0; u < grayBp[s][t].length; u++) {
+                        if (grayBp[s][t][u] < 0 || grayBp[s][t][u] > 1) {
+                        }
+                    }
+                }
+            }
+*/            
+            
+            
+            
+            
+            
+        } catch (Exception e) {
+            System.err.println(e + " was found decompressing Bitplanes");
+        }
     }
     
     public void compressHuffman() {

@@ -23,10 +23,13 @@ public class App {
             Processor p = new Processor();
             p.loadImageGrayscale(TEST_FILENAME);
             
-//            p.compressRLEBP();
-            p.compressRLEGV("compressedfile");
-            p.decompressRLEGV("compressedfile");
-            p.saveImage("easy.tiff");
+            p.compressRLEBP("compressedFileBP");
+            p.decompressRLEBP("compressedFileBP");
+            p.saveImage("easyBP.tiff");
+
+//            p.compressRLEGV("compressedfile");
+//            p.decompressRLEGV("compressedfile");
+//            p.saveImage("easy.tiff");
         } else {
             try {
                 MainScreen screen = new MainScreen();
