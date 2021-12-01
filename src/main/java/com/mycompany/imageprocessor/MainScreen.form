@@ -113,7 +113,7 @@
             <Component class="javax.swing.JComboBox" name="algorithmComboBox">
               <Properties>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="22">
+                  <StringArray count="28">
                     <StringItem index="0" value="Downscale"/>
                     <StringItem index="1" value="Zoom (Nearest Neighbor)"/>
                     <StringItem index="2" value="Zoom (LinearX)"/>
@@ -136,6 +136,12 @@
                     <StringItem index="19" value="Midpoint Filter"/>
                     <StringItem index="20" value="Alpha-trimmed Mean Filter"/>
                     <StringItem index="21" value="Add Noise"/>
+                    <StringItem index="22" value="CompressRLEGV"/>
+                    <StringItem index="23" value="DecompressRLEGV"/>
+                    <StringItem index="24" value="CompressRLEBP"/>
+                    <StringItem index="25" value="DecompressRLEBP"/>
+                    <StringItem index="26" value="Huffman"/>
+                    <StringItem index="27" value="Huffman-Decompress"/>
                   </StringArray>
                 </Property>
               </Properties>

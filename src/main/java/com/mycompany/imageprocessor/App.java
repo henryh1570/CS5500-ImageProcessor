@@ -18,12 +18,12 @@ public class App {
     public static void main(String[] args) {
 
         //Run the GUI MainScreen
-        boolean GUIoff = true;
+        boolean GUIoff = false;
         if (GUIoff) {
             Processor p = new Processor();
             p.loadImageGrayscale(TEST_FILENAME);
             
-            p.compressRLEBP("compressedFileBP");
+//            p.compressRLEBP("compressedFileBP");
             p.decompressRLEBP("compressedFileBP");
             p.saveImage("easyBP.tiff");
 

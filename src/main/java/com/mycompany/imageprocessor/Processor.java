@@ -1225,9 +1225,20 @@ public class Processor {
                 grayBp[7][i][j] = getBit(7, grayVal);
             }
         }
+/*        
+        for (int q = 0; q < grayBp.length; q++) {
+            for (int w = 0; w < grayBp[q].length; w++) {
+                for (int e = 0; e < grayBp[q][w].length; e++) {
+                    System.out.print("["+grayBp[q][w][e]+"]");
+                }
+                System.out.println();
+            }
+            System.out.println("END OF PLANE : " + q);
+            System.out.println();
+        }
+*/        
         
         final char NEWLINE = '\n';
-        final char SEPARATOR = ' ';
         final char FLAG = '!';
         final char BITPLANE_END = 'b';
                 
@@ -1249,13 +1260,13 @@ public class Processor {
                             count++;
                         } else {
                             //Write target, empty count, flip target.
-                            pw.write(target + "" + FLAG + "" + count + "" + SEPARATOR);
+                            pw.write(FLAG + "" + count);
                             target = target ^ 1;
                             count = 0;
                         }
                     }
                     //Write target. Write NEWLINE, empty count, target begins back on 0.
-                    pw.write(target + "" + FLAG + "" + count + "" + SEPARATOR);
+                    pw.write(FLAG + "" + count);
                     target = 0;
                     count = 0;
                     pw.write(NEWLINE);
@@ -1287,12 +1298,11 @@ public class Processor {
             BufferedReader br = new BufferedReader(fr);
 
             String str = "";
-            String strReader = "";
-            
+            String strReader = br.readLine();
             while (strReader != null) {
-                strReader = br.readLine();
                 str += strReader;
                 str += '\n'; //BufferedReader eats the newline.add it back in.
+                strReader = br.readLine();
             }
             ArrayList<Character> list = new ArrayList<>();
             for (char ch : str.toCharArray()) {
@@ -1301,56 +1311,64 @@ public class Processor {
             
             final char FLAG = '!';
             final char NEWLINE = '\n';
-            final char SEPARATOR = ' ';
             final char BITPLANE_END = 'b';
             
-            int a = 0; //row
-            int b = 0; //col
-            int bp = 0;//Bit-plane
-            
-            boolean lookingForPower = false;
-            String valToLoop = "";
+            int x = 0; //row
+            int y = 0; //col
+            int g = 0;//Bit-plane            
+            int target = 0;
+            boolean atStart = true; //Don't count first flag
             String line = "";
+            
             for (int i = 0; i < list.size(); i++) {
+//                System.out.println("i: "+i+"| line:"+line+"|bp = "+g+"|a="+x+"|b="+y);
                 char c = list.get(i);
-                str += c;
 
-                if (c == FLAG) {
-                    valToLoop = line;
-                    line = "";
-                    lookingForPower = true;
-                } else if (c == SEPARATOR) {
-                    if (!lookingForPower) {
-                        int val = Integer.parseInt(line);
-                        grayBp[bp][a][b] = val;
-                        b++;
-                    } else {
-                        int iterations = Integer.parseInt(line);
-                        int val = Integer.parseInt(valToLoop);
-                        for (int z = 0; z < iterations; z++) {
-                        grayBp[bp][a][b] = val;
-                            b++;
+                if (g < 8) {
+                    if (c == FLAG) {
+                        // Make sure not beginning of a line.
+                        if (!atStart) {
+                            // Write
+    //                        System.out.println("i = "+i+"|line = "+line);
+                            int iterations = Integer.parseInt(line);
+                            for (int z = 0; z < iterations; z++) {
+                                grayBp[g][x][y] = target;
+                                y++;
+                            }
+                            target = target ^ 1;
+                            line="";
+                        } else {
+                            atStart = false;
+                            line="";
                         }
-                    }
-                    valToLoop="";
-                    line="";
-                    lookingForPower = false;
-                } else if (c == NEWLINE) {
-                    line="";
-                    a++;
-                    b=0;
-                } else if (c == BITPLANE_END) {
-                    //BITPLANE_END is always after a newline
-                    a=0;
-                    b=0;
-                    bp++;
-                } else {// Continue recording number-char
-                    line += c;                    
+                    } else if (c == NEWLINE) {
+                        // Write
+                        int iterations = Integer.parseInt(line);
+                        for (int z = 0; z < iterations; z++) {
+                            grayBp[g][x][y] = target;
+                            y++;
+                        }
+                        // Reset y,line,target
+                        target = 0;                    
+                        x++;
+                        y=0;
+                        line="";
+                        atStart = true;
+                    } else if (c == BITPLANE_END) {
+                        //Occurs after NEWLINE, no need to write anything.
+                        target = 0;
+                        g++;
+                        x=0;
+                        y=0;
+                        line="";
+                        atStart = true;
+                    } else {
+                        line += c;
+                    }                
                 }
             }
             br.close();
-
-
+            
             outputMatrix = new Mat(matrix.rows(), matrix.cols(), CV_8UC1);
             //All GrayBitPlanes reinitialized now.
             for(int i = 0; i < matrix.rows(); i++) {
@@ -1364,28 +1382,11 @@ public class Processor {
                     strVal += grayBp[2][i][j];
                     strVal += grayBp[1][i][j];
                     strVal += grayBp[0][i][j];
-                    int val = Integer.parseInt(strVal);
+                    int val = Integer.parseInt(strVal, 2);
                     int pixelVal = getNumFromGrayCode(val);
                     outputMatrix.put(i, j, pixelVal);
                 }
             }
-            
-            
-/*            
-            for (int s = 0; s < grayBp.length; s++) {
-                for (int t = 0; t < grayBp[s].length; t++) {
-                    for (int u = 0; u < grayBp[s][t].length; u++) {
-                        if (grayBp[s][t][u] < 0 || grayBp[s][t][u] > 1) {
-                        }
-                    }
-                }
-            }
-*/            
-            
-            
-            
-            
-            
         } catch (Exception e) {
             System.err.println(e + " was found decompressing Bitplanes");
         }

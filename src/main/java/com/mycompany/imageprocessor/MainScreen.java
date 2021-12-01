@@ -54,7 +54,7 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
-        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel", "Global Histogram Equalization", "Local Histogram Equalization", "Median Filter", "Laplacian Filter", "Smoothing Filter", "HighBoost Filter", "BitPlane Removal", "Arithmetic Mean Filter", "Geometric Mean Filter", "Harmonic Mean Filter", "Contraharmonic Mean Filter", "Max Filter", "Min Filter", "Midpoint Filter", "Alpha-trimmed Mean Filter", "Add Noise" }));
+        algorithmComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Downscale", "Zoom (Nearest Neighbor)", "Zoom (LinearX)", "Zoom (LinearY)", "Zoom (Bilinear)", "Reduce Graylevel", "Global Histogram Equalization", "Local Histogram Equalization", "Median Filter", "Laplacian Filter", "Smoothing Filter", "HighBoost Filter", "BitPlane Removal", "Arithmetic Mean Filter", "Geometric Mean Filter", "Harmonic Mean Filter", "Contraharmonic Mean Filter", "Max Filter", "Min Filter", "Midpoint Filter", "Alpha-trimmed Mean Filter", "Add Noise", "CompressRLEGV", "DecompressRLEGV", "CompressRLEBP", "DecompressRLEBP", "Huffman", "Huffman-Decompress" }));
         algorithmComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 algorithmComboBoxActionPerformed(evt);
@@ -334,6 +334,26 @@ public class MainScreen extends javax.swing.JFrame {
                 case "Add Noise":
                     processor.addNoise(rowsTextField.getText());
                     break;
+                case "CompressRLEGV":
+                    String fileName = rowsTextField.getText();
+                    processor.compressRLEGV(fileName);
+                    break;
+                case "DecompressRLEGV":
+                    fileName = rowsTextField.getText();
+                    processor.decompressRLEGV(fileName);
+                    break;
+                case "CompressRLEBP":
+                    fileName = rowsTextField.getText();
+                    processor.compressRLEBP(fileName);
+                    break;
+                case "DecompressRLEBP":
+                    fileName = rowsTextField.getText();
+                    processor.decompressRLEBP(fileName);
+                    break;
+                case "Huffman":
+                    break;
+                case "Huffman-Decompress":
+                break;
                 default: System.out.println("Something in the algorithm combo box was chosen incorrectly");
                     break;
             }
@@ -416,6 +436,24 @@ public class MainScreen extends javax.swing.JFrame {
             case "Add Noise":
                 instructionLabel.setText("<html>Instructions: Add Noise, enter the type of noise to use in the first text box to the right of the number combo box ('salt', 'pepper', saltpepper', 'poisson', 'speckle'"
                         + ", or 'gaussian').</html>");
+                break;
+            case "CompressRLEGV":
+                instructionLabel.setText("<html>Instructions: Open the file first. Type in the name to compress to in the 1st box on the left.</html>");
+                break;
+            case "DecompressRLEGV":
+                instructionLabel.setText("<html>Instructions: Type in the file name to decompress in the left box. Press the apply button. Note: Keep original image loaded due to 512x512 hard-coded alg.</html>");
+                break;
+            case "CompressRLEBP":
+                instructionLabel.setText("<html>Instructions: Open the file first. Type in the name to compress to in the 1st box on the left.</html>");
+                break;
+            case "DecompressRLEBP":
+                instructionLabel.setText("<html>Instructions: Type in the file name to decompress in the left box. Press the apply button. Note: Keep original image loaded due to 512x512 hard-coded alg.</html>");
+                break;
+            case "Huffman":
+                instructionLabel.setText("<html>Instructions: Unfortunately, not implemented yet.</html>");
+                break;
+            case "Huffman-Decompress":
+                instructionLabel.setText("<html>Instructions: Unfortunately, not implemented yet.</html>");
                 break;
             default:
                 break;
